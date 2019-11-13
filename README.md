@@ -87,13 +87,8 @@ ObjectCoord
 
 ```
 ##    ObjectLoc        x        y
-<<<<<<< HEAD
-## 1:         2 461.5869 425.1844
-## 2:         1 226.5102 131.8683
-=======
 ## 1:         1 461.5869 425.1844
 ## 2:         2 226.5102 131.8683
->>>>>>> 85c0742deb4e2d8a7d089233a1700680bd75a862
 ```
 The location is calculated by vector length of mouse (nose) to the object. This should be further optimised using the centroid of the mouse. I guess it will be more stable too.
 
