@@ -120,16 +120,33 @@ ObjectDistancePlotLine <- ggplot(data = ObjectDistance, aes(x = Time, y = Distan
   ylab("Distance to Object (px)")+
   xlab("Time (s)")+
   theme_classic()
-
-OutPutPlotMap <- grid.arrange(SpeedPlot, DensityPlot, ncol = 2)
-OutPutPlotMovement <- grid.arrange(SpeedPlotLine, DistancePlotLine, ncol = 2)
-
-
 ```
 
-```{r, echo=F, message=F}
-OutPutPlotMap
-OutPutPlotMovement
+We will take a look at the density of the location. This shows the likelihood of the animal being at any given point on the map. Yellow will indicate a high probability of the animal visiting the spot. Blue is very low or not even visited once. I also added the objects as circles. The size of course is not correct and would need to be changed according to the real object (I guess but it is not the highest priority).
+
+```{r DensityPlot, echo=F, warning=F}
+DensityPlot
+```
+
+The second plot shows the trajectory of the animal and in colour code the speed at the given segment. This might This will indicate where the animal is standing still and where it is just running from A to B.
+
+```{r, echo=F, warning=F}
+SpeedPlot
+```
+
+The speed plot is showing the change of speed over time. It looks like it might not change much but more analysis could indicate a trend that they are just moving less in the end due to boredom or exhaustion.
+
+```{r, echo=F, warning=F}
+SpeedPlotLine
+```
+Similarly to the speed the distance over time as cumulative distance could also be a measure of exploration. A linear relationship would mean equal exploration whereas a flattend curve would mean less exploration in the end.
+
+```{r, echo=F, warning=F}
+DistancePlotLine
+```
+
+The object distance plot shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration.
+
+```{r, echo=F, warning=F}
 ObjectDistancePlotLine
 ```
-
