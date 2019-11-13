@@ -44,7 +44,7 @@ LabelNames <- fread(file = FileName, nrows = 1)
 # Construct unique columns
 ColumnNames <- paste(LabelNames, colnames(DataSet), sep="_")
 colnames(DataSet) <- ColumnNames
-
+# Print table
 DataSet[1:3,1:3]
 ```
 

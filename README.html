@@ -395,7 +395,7 @@ LabelNames &lt;- fread(file = FileName, nrows = 1)
 # Construct unique columns
 ColumnNames &lt;- paste(LabelNames, colnames(DataSet), sep=&quot;_&quot;)
 colnames(DataSet) &lt;- ColumnNames
-
+# Print table
 DataSet[1:3,1:3]</code></pre>
 <pre><code>##    bodyparts_coords leftear_x leftear_y
 ## 1:                0  138.7201  422.8099
