@@ -18,7 +18,7 @@ ColumnNames <- paste(LabelNames, colnames(DataSet), sep="_")
 colnames(DataSet) <- ColumnNames
 
 # Calculate Speed/Distance Travelled
-DataSet[,InstDistance := sqrt((shift(nose_x, type = "lead") - nose_x)^2+abs(shift(nose_y, type = "lead") - nose_y)^2)][,NoseSpeed := InstDistance/FrameRate][,CumDist := cumsum(InstDistance)]
+DataSet[,InstDistance := sqrt((shift(nose_x, type = "lead") - nose_x)^2+abs(shift(nose_y, type = "lead") - nose_y)^2)][,NoseSpeed := InstDistance/(1/FrameRate)][,CumDist := cumsum(InstDistance)]
 
 # Find Object Location
 ObjectSet <- data.table(x=c(DataSet$object1_x, DataSet$object2_x), y = c(DataSet$object1_y, DataSet$object2_y))
