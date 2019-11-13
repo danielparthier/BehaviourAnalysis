@@ -1,7 +1,7 @@
 ---
 title: "Analysis Overview"
 author: "Daniel Parthier"
-date: "13 11 2019"
+date: "13.11.2019"
 output: 
   html_document:
     keep_md: true
@@ -82,8 +82,8 @@ ObjectCoord
 
 ```
 ##    ObjectLoc        x        y
-## 1:         2 461.5869 425.1844
-## 2:         1 226.5102 131.8683
+## 1:         1 461.5869 425.1844
+## 2:         2 226.5102 131.8683
 ```
 The location is calculated by vector length of mouse (nose) to the object. This should be further optimised using the centroid of the mouse. I guess it will be more stable too.
 
