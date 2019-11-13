@@ -76,13 +76,14 @@ The syntax I use is with the `data.table` approach which is rather **SQL** like 
 ObjectSet <- data.table(x=c(DataSet$object1_x, DataSet$object2_x), y = c(DataSet$object1_y, DataSet$object2_y))
 ObjectSet$ObjectLoc <- kmeans(x = ObjectSet[,.(x,y)], centers = ObjectNumber)$cluster
 ObjectCoord <- ObjectSet[,.(x=median(x),y=median(y)), by=ObjectLoc]
+# Print table
 ObjectCoord
 ```
 
 ```
 ##    ObjectLoc        x        y
-## 1:         1 461.5869 425.1844
-## 2:         2 226.5102 131.8683
+## 1:         2 461.5869 425.1844
+## 2:         1 226.5102 131.8683
 ```
 The location is calculated by vector length of mouse (nose) to the object. This should be further optimised using the centroid of the mouse. I guess it will be more stable too.
 
