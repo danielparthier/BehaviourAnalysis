@@ -2,7 +2,8 @@
 title: "Analysis Overview"
 author: "Daniel Parthier"
 date: "13 11 2019"
-output: html_document
+output:
+  output: rmarkdown::github_document
 ---
 
 ```{r setup, include=FALSE}
