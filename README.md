@@ -68,13 +68,7 @@ Having a "clean" data set allows us now to calculate properties of the movement 
 DataSet[,InstDistance := sqrt((shift(nose_x, type = "lead") - nose_x)^2+abs(shift(nose_y, type = "lead") - nose_y)^2)][,NoseSpeed := InstDistance/(1/FrameRate)][,CumDist := cumsum(InstDistance)]
 ```
 
-The syntax I use is with the `data.table` approach which is rather **SQL** like than **R** or **Python**. It is just super fast and keeps a clean table. Absolutely personal preference and I am willing to learn!
-<<<<<<< HEAD
-  
-=======
-\  
->>>>>>> 85c0742deb4e2d8a7d089233a1700680bd75a862
-The object coordinates can now used to seperate **n** numbers of objects using k-means. This will assign cluster numbers to based on location. What this means in the end is that jumping labels will be corrected. Here I will use the median XY for any given object in order to estimate the exact location without jitter. Then we will create a new table which just holds the coordinates for the objects.
+The syntax I use is with the `data.table` approach which is rather **SQL** like than **R** or **Python**. It is just super fast and keeps a clean table. Absolutely personal preference and I am willing to learn! The object coordinates can now used to seperate **n** numbers of objects using k-means. This will assign cluster numbers to based on location. What this means in the end is that jumping labels will be corrected. Here I will use the median XY for any given object in order to estimate the exact location without jitter. Then we will create a new table which just holds the coordinates for the objects.
 
 
 ```r
@@ -87,13 +81,8 @@ ObjectCoord
 
 ```
 ##    ObjectLoc        x        y
-<<<<<<< HEAD
-## 1:         2 461.5869 425.1844
-## 2:         1 226.5102 131.8683
-=======
 ## 1:         1 461.5869 425.1844
 ## 2:         2 226.5102 131.8683
->>>>>>> 85c0742deb4e2d8a7d089233a1700680bd75a862
 ```
 The location is calculated by vector length of mouse (nose) to the object. This should be further optimised using the centroid of the mouse. I guess it will be more stable too.
 
