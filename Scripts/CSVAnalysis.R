@@ -18,7 +18,7 @@ ColumnNames <- paste(LabelNames, colnames(DataSet), sep="_")
 colnames(DataSet) <- ColumnNames
 
 # Calculate Speed/Distance Travelled
-DataSet[,InstDistance := sqrt((shift(nose_x, type = "lead") - nose_x)^2+abs(shift(nose_y, type = "lead") - nose_y)^2)][,NoseSpeed := InstDistance/FrameRate][,CumDist := cumsum(InstDistance)]
+DataSet[,InstDistance := sqrt((shift(nose_x, type = "lead") - nose_x)^2+abs(shift(nose_y, type = "lead") - nose_y)^2)][,NoseSpeed := InstDistance/(1/FrameRate)][,CumDist := cumsum(InstDistance)]
 
 # Find Object Location
 ObjectSet <- data.table(x=c(DataSet$object1_x, DataSet$object2_x), y = c(DataSet$object1_y, DataSet$object2_y))
@@ -73,6 +73,6 @@ ObjectDistancePlotLine <- ggplot(data = ObjectDistance, aes(x = Time, y = Distan
 OutPutPlotMap <- grid.arrange(SpeedPlot, DensityPlot, ncol = 2)
 OutPutPlotMovement <- grid.arrange(SpeedPlotLine, DistancePlotLine, ncol = 2)
 
-ggsave(plot = OutPutPlotMap, filename = "C:/Users/danie/Documents/PhD/Data/R_Analysis/R analysis/Behaviour/BehaviourAnalysis/Plots/OutPutPlotMap.pdf", device = "pdf", width = 10.4, height = 4)
-ggsave(plot = OutPutPlotMovement, filename = "C:/Users/danie/Documents/PhD/Data/R_Analysis/R analysis/Behaviour/BehaviourAnalysis/Plots/OutPutPlotMovement.pdf", device = "pdf", width = 10.4, height = 4)
-ggsave(plot = ObjectDistancePlotLine, filename = "C:/Users/danie/Documents/PhD/Data/R_Analysis/R analysis/Behaviour/BehaviourAnalysis/Plots/ObjectDistancePlotLine.pdf", device = "pdf", width = 5, height = 3)
+ggsave(plot = OutPutPlotMap, filename = "Plots/OutPutPlotMap.pdf", device = "pdf", width = 10.4, height = 4)
+ggsave(plot = OutPutPlotMovement, filename = "Plots/OutPutPlotMovement.pdf", device = "pdf", width = 10.4, height = 4)
+ggsave(plot = ObjectDistancePlotLine, filename = "Plots/ObjectDistancePlotLine.pdf", device = "pdf", width = 5, height = 3)
