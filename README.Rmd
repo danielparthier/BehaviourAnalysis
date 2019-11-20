@@ -57,24 +57,9 @@ DataSet[,InstDistance := sqrt((shift(nose_x, type = "lead") - nose_x)^2+abs(shif
 
 The syntax I use is with the `data.table` approach which is rather **SQL** like than **R** or **Python**. It is just super fast and keeps a clean table. Absolutely personal preference and I am willing to learn! The object coordinates can now be used to seperate **n** numbers of objects using k-means. This will assign cluster numbers to based on location. What this means in the end is that jumping labels will be corrected. Here I will use the median XY for any given object in order to estimate the exact location without jitter. Then we will create a new table which just holds the coordinates for the objects.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-```{r ObjectLocation, warning=F}
-# Find Object location
-ObjectSet <- data.table(x=data.table::melt(DataSet[,.SD,
-                                                   .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "object") & (names(DataSet) %like% "x")])$value,
-                        y = data.table::melt(DataSet[,.SD,
-                                                     .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "object") & (names(DataSet) %like% "y")])$value)
-=======
 ```{r ObjectLocation}
 # Find Object Location
 ObjectSet <- data.table(x=c(DataSet$object1_x, DataSet$object2_x), y = c(DataSet$object1_y, DataSet$object2_y))
->>>>>>> parent of 8222dfc... Fixed missing brackets
-=======
-```{r ObjectLocation}
-# Find Object Location
-ObjectSet <- data.table(x=c(DataSet$object1_x, DataSet$object2_x), y = c(DataSet$object1_y, DataSet$object2_y))
->>>>>>> parent of 8222dfc... Fixed missing brackets
 ObjectSet$ObjectLoc <- kmeans(x = ObjectSet[,.(x,y)], centers = ObjectNumber)$cluster
 ObjectCoord <- ObjectSet[,.(x=median(x),y=median(y)), by=ObjectLoc]
 # Print table
@@ -88,25 +73,9 @@ DataSet[,DistToObject1:=sqrt((nose_x-ObjectCoord[ObjectLoc==1, x])^2+(nose_y-Obj
 
 To tidy up the table and to make it easier to plot with `ggplot2` I will restructure the table to "long format". I could also use for this pupose the `reshape` function. However, here I will do it quickly manually to assign directly the right labels.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-```{r DistanceTable, warning=F}
-if(ObjectNumber>0) {
-  # Generate distance table
-  ObjectDistance <- data.table::melt.data.table(MouseData[,.SD,.SDcols = (names(MouseData) %like% "DistToObject")])
-  ObjectDistance[,ObjectNr := gsub("DistToObject", "", variable)][,Time := rep(MouseData$bodyparts_coords/FrameRate, times = ObjectNumber)][,variable:=NULL]
-  setnames(x = ObjectDistance, old = "value", new = "Distance")
-}
-=======
 ```{r DistanceTable}
 # Generate distance table
 ObjectDistance <- data.table(Time = rep(DataSet$bodyparts_coords/FrameRate, times = 2), Distance = c(DataSet$DistToObject1, DataSet$DistToObject2), ObjectLoc = rep(c("1","2"), each = length(DataSet$bodyparts_coords)))
->>>>>>> parent of 8222dfc... Fixed missing brackets
-=======
-```{r DistanceTable}
-# Generate distance table
-ObjectDistance <- data.table(Time = rep(DataSet$bodyparts_coords/FrameRate, times = 2), Distance = c(DataSet$DistToObject1, DataSet$DistToObject2), ObjectLoc = rep(c("1","2"), each = length(DataSet$bodyparts_coords)))
->>>>>>> parent of 8222dfc... Fixed missing brackets
 ```
 
 We can then generate plots showing our computed parameters. Here we should check though which parameters are of importance and how to present them.    Furthermore, we will have to check for the object size and validate the pixel size to get later proper measurements.
