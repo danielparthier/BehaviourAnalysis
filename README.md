@@ -1,7 +1,7 @@
 ---
 title: "Analysis Overview"
 author: "Daniel Parthier"
-date: "13.11.2019"
+date: "20.11.2019"
 output: 
   html_document:
     keep_md: true
@@ -115,25 +115,6 @@ ObjectSet <- data.table(x=data.table::melt(DataSet[,.SD,
                                                    .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "object") & (names(DataSet) %like% "x")])$value,
                         y = data.table::melt(DataSet[,.SD,
                                                      .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "object") & (names(DataSet) %like% "y")])$value)
-```
-
-```
-## Warning in melt.data.table(DataSet[, .SD, .SDcols = !(names(DataSet)
-## %like% : id.vars and measure.vars are internally guessed when both are
-## 'NULL'. All non-numeric/integer/logical type columns are considered
-## id.vars, which in this case are columns []. Consider providing at least one
-## of 'id' or 'measure' vars in future.
-```
-
-```
-## Warning in melt.data.table(DataSet[, .SD, .SDcols = !(names(DataSet)
-## %like% : id.vars and measure.vars are internally guessed when both are
-## 'NULL'. All non-numeric/integer/logical type columns are considered
-## id.vars, which in this case are columns []. Consider providing at least one
-## of 'id' or 'measure' vars in future.
-```
-
-```r
 ObjectSet$ObjectLoc <- kmeans(x = ObjectSet[,.(x,y)], centers = ObjectNumber)$cluster
 ObjectCoord <- ObjectSet[,.(x=median(x),y=median(y)), by=ObjectLoc]
 
@@ -178,14 +159,6 @@ if(ObjectNumber>0) {
 }
 ```
 
-```
-## Warning in data.table::melt.data.table(MouseData[, .SD, .SDcols =
-## (names(MouseData) %like% : id.vars and measure.vars are internally guessed
-## when both are 'NULL'. All non-numeric/integer/logical type columns are
-## considered id.vars, which in this case are columns []. Consider providing
-## at least one of 'id' or 'measure' vars in future.
-```
-
 We can then generate plots showing our computed parameters. Here we should check though which parameters are of importance and how to present them.    Furthermore, we will have to check for the object size and validate the pixel size to get later proper measurements.
 
 
@@ -198,6 +171,6 @@ The speed plot (A) is showing the change of speed over time. It looks like it mi
 
 ![](README_figs/README-unnamed-chunk-2-1.png)<!-- -->
 
-The object distance plot (C) shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration. Further we can explore the angle with which the animal is looking at the objects (B/C) for each object.
+The object distance plot (C) shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration. Further we can explore the angle with which the animal is looking at the objects (B and C) for each object.
 
 ![](README_figs/README-unnamed-chunk-3-1.png)<!-- -->
