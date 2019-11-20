@@ -122,12 +122,13 @@ if(ObjectNumber>0) {
     # Calculate object distance
     MouseData[,paste0("DistToObject",i):=sqrt((nose_x-ObjectCoord[ObjectLoc==i, x])^2+(nose_y-ObjectCoord[ObjectLoc==i, y])^2)]
   }
-  
+}  
 ```
 
 To tidy up the table and to make it easier to plot with `ggplot2` I will restructure the table to "long format". I could also use for this pupose the `reshape` function. However, here I will do it quickly manually to assign directly the right labels.
 
 ```{r DistanceTable}
+if(ObjectNumber>0) {
   # Generate distance table
   ObjectDistance <- data.table::melt.data.table(MouseData[,.SD,.SDcols = (names(MouseData) %like% "DistToObject")])
   ObjectDistance[,ObjectNr := gsub("DistToObject", "", variable)][,Time := rep(MouseData$bodyparts_coords/FrameRate, times = ObjectNumber)][,variable:=NULL]
@@ -225,5 +226,5 @@ OutPutPlotMovement
 The object distance plot (C) shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration. Further we can explore the angle with which the animal is looking at the objects (B/C) for each object.
 
 ```{r, echo=F, warning=F, dpi=250}
-ObjectDistancePlotLine
+MovementPlot
 ```
