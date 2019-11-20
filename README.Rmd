@@ -1,7 +1,7 @@
 ---
 title: "Analysis Overview"
 author: "Daniel Parthier"
-date: "13.11.2019"
+date: "20.11.2019"
 output: 
   html_document:
     keep_md: true
@@ -14,7 +14,7 @@ library(readr)
 library(ggplot2)
 library(viridis)
 library(patchwork)
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
+knitr::opts_knit$set(root.dir = getwd()) 
 knitr::opts_chunk$set(echo=T,   fig.path = "README_figs/README-")
 ```
 
@@ -94,7 +94,7 @@ MouseData[,InstDistance := sqrt((shift(centroid_x, type = "lead") - centroid_x)^
 
 The syntax I use is with the `data.table` approach which is rather **SQL** like than **R** or **Python**. It is just super fast and keeps a clean table. Absolutely personal preference and I am willing to learn! The object coordinates can now be used to seperate **n** numbers of objects using k-means. This will assign cluster numbers to based on location. What this means in the end is that jumping labels will be corrected. Here I will use the median XY for any given object in order to estimate the exact location without jitter. Then we will create a new table which just holds the coordinates for the objects.
 
-```{r ObjectLocation}
+```{r ObjectLocation, warning=F}
 # Find Object location
 ObjectSet <- data.table(x=data.table::melt(DataSet[,.SD,
                                                    .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "object") & (names(DataSet) %like% "x")])$value,
@@ -127,7 +127,7 @@ if(ObjectNumber>0) {
 
 To tidy up the table and to make it easier to plot with `ggplot2` I will restructure the table to "long format". I could also use for this pupose the `reshape` function. However, here I will do it quickly manually to assign directly the right labels.
 
-```{r DistanceTable}
+```{r DistanceTable, warning=F}
 if(ObjectNumber>0) {
   # Generate distance table
   ObjectDistance <- data.table::melt.data.table(MouseData[,.SD,.SDcols = (names(MouseData) %like% "DistToObject")])
@@ -223,7 +223,7 @@ The speed plot (A) is showing the change of speed over time. It looks like it mi
 OutPutPlotMovement
 ```
 
-The object distance plot (C) shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration. Further we can explore the angle with which the animal is looking at the objects (B/C) for each object.
+The object distance plot (C) shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration. Further we can explore the angle with which the animal is looking at the objects (B and C) for each object.
 
 ```{r, echo=F, warning=F, dpi=250}
 MovementPlot
