@@ -49,128 +49,76 @@ LabelNames <- fread(file = FileName, nrows = 1)
 # Construct unique columns
 ColumnNames <- paste(LabelNames, colnames(DataSet), sep="_")
 colnames(DataSet) <- ColumnNames
-
-# Correct for inverse y coordinates
-DataSet[, (grep("_y", colnames(DataSet))) := 
-          (lapply(.SD, function(x){-x})), 
-        .SDcols = grep("_y", colnames(DataSet))]
-
-# Generate mouse table with bodyparts
-MouseData <- DataSet[,.SD,
-                     .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "nose|ear|tail|body")]
-
 # Print table
-MouseData[1:3,1:3]
+DataSet[1:3,1:3]
 ```
 
 ```
 ##    bodyparts_coords leftear_x leftear_y
-## 1:                0  138.7201 -422.8099
-## 2:                1  141.6581 -390.2830
-## 3:                2  141.6607 -390.1670
+## 1:                0  138.7201  422.8099
+## 2:                1  141.6581  390.2830
+## 3:                2  141.6607  390.1670
 ```
 
-Having a "clean" data set allows us now to calculate properties of the movement or the position. Here we will quickly look at the Distance (length of the vector at any given point) and the speed (vector length as function of time). To get good estimates for the speed we will use the centroid of the body, however, for the location we will use the centroid of the head since it is the part which is used for exploration and contact.
-
+Having a "clean" data set allows us now to calculate properties of the movement or the position. Here we will quickly look at the Distance (length of the vector at any given point) and the speed (vector length as function of time).
 
 
 ```r
-# Calculate centroid
-MouseData[,centroid_x:=sum(.SD)/3,
-          .SDcols = !(names(MouseData) %like% "nose") & (names(MouseData) %like% "_x"),
-          by = bodyparts_coords][
-            ,centroid_y:=sum(.SD)/3,
-            .SDcols = !(names(MouseData) %like% "nose") & (names(MouseData) %like% "_y"),
-            by = bodyparts_coords]
-
-MouseData[,head_x:=sum(.SD)/2,
-              .SDcols = (names(MouseData) %like% "ear") & (names(MouseData) %like% "_x"),
-              by = bodyparts_coords][
-                ,head_y:=sum(.SD)/2,
-                .SDcols = (names(MouseData) %like% "ear") & (names(MouseData) %like% "_y"),
-                by = bodyparts_coords]
-```
-
-With the combination of the two we can not only get the speed but also the head direction of the animal.
-
-
-```r
-# Angle
-MouseData[,head_angle:=(atan2(x = (nose_x-head_x),y = (nose_y-head_y))),][
-  ,body_angle:=(atan2(x = (head_x-tailbase_x),y = (head_y-tailbase_y))),][
-    ,view_angle:=head_angle-body_angle,] 
-
-# Calculate Speed/Distance travelled
-MouseData[,InstDistance := sqrt((shift(centroid_x, type = "lead") - centroid_x)^2+abs(shift(centroid_y, type = "lead") - centroid_y)^2)][
-  ,Speed := InstDistance/(1/FrameRate)][
-    ,CumDist := cumsum(InstDistance)]
+# Calculate Speed/Distance Travelled
+DataSet[,InstDistance := sqrt((shift(nose_x, type = "lead") - nose_x)^2+abs(shift(nose_y, type = "lead") - nose_y)^2)][,NoseSpeed := InstDistance/(1/FrameRate)][,CumDist := cumsum(InstDistance)]
 ```
 
 The syntax I use is with the `data.table` approach which is rather **SQL** like than **R** or **Python**. It is just super fast and keeps a clean table. Absolutely personal preference and I am willing to learn! The object coordinates can now be used to seperate **n** numbers of objects using k-means. This will assign cluster numbers to based on location. What this means in the end is that jumping labels will be corrected. Here I will use the median XY for any given object in order to estimate the exact location without jitter. Then we will create a new table which just holds the coordinates for the objects.
 
 
 ```r
-# Find Object location
-ObjectSet <- data.table(x=data.table::melt(DataSet[,.SD,
-                                                   .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "object") & (names(DataSet) %like% "x")])$value,
-                        y = data.table::melt(DataSet[,.SD,
-                                                     .SDcols = !(names(DataSet) %like% "likelihood") & (names(DataSet) %like% "object") & (names(DataSet) %like% "y")])$value)
+# Find Object Location
+ObjectSet <- data.table(x=c(DataSet$object1_x, DataSet$object2_x), y = c(DataSet$object1_y, DataSet$object2_y))
 ObjectSet$ObjectLoc <- kmeans(x = ObjectSet[,.(x,y)], centers = ObjectNumber)$cluster
 ObjectCoord <- ObjectSet[,.(x=median(x),y=median(y)), by=ObjectLoc]
-
 # Print table
 ObjectCoord
 ```
 
 ```
-##    ObjectLoc        x         y
-## 1:         2 461.5869 -425.1844
-## 2:         1 226.5102 -131.8683
+##    ObjectLoc        x        y
+## 1:         1 461.5869 425.1844
+## 2:         2 226.5102 131.8683
 ```
 The location is calculated by vector length of mouse (nose) to the object. This should be further optimised using the centroid of the mouse. I guess it will be more stable too.
 
 ```r
-# Calculate angle difference from object to mouse view
-if(ObjectNumber>0) {
-  for(i in 1:ObjectNumber) {
-    object_angle <- paste("object", i, "angle", sep = "_")
-    object_head_angle <- paste("object", i, "head_angle", sep = "_")
-    MouseData[,eval(object_angle):=(atan2(x = (ObjectCoord[ObjectLoc==i, x]-head_x),
-                                          y = (ObjectCoord[ObjectLoc==i, y]-head_y))),][
-                                            ,eval(object_head_angle):=get(object_angle)-head_angle,][
-                                              get(object_head_angle) > pi, eval(object_head_angle):=get(object_head_angle)-2*pi,][
-                                                get(object_head_angle) < -pi, eval(object_head_angle):=get(object_head_angle)+2*pi,]
-    
-    # Calculate object distance
-    MouseData[,paste0("DistToObject",i):=sqrt((nose_x-ObjectCoord[ObjectLoc==i, x])^2+(nose_y-ObjectCoord[ObjectLoc==i, y])^2)]
-  }
-}  
+# Calculate object distance for two objects (should be made more flexible)
+DataSet[,DistToObject1:=sqrt((nose_x-ObjectCoord[ObjectLoc==1, x])^2+(nose_y-ObjectCoord[ObjectLoc==1, y])^2)][,DistToObject2:=sqrt((nose_x-ObjectCoord[ObjectLoc==2, x])^2+(nose_y-ObjectCoord[ObjectLoc==2, y])^2)]
 ```
 
 To tidy up the table and to make it easier to plot with `ggplot2` I will restructure the table to "long format". I could also use for this pupose the `reshape` function. However, here I will do it quickly manually to assign directly the right labels.
 
 
 ```r
-if(ObjectNumber>0) {
-  # Generate distance table
-  ObjectDistance <- data.table::melt.data.table(MouseData[,.SD,.SDcols = (names(MouseData) %like% "DistToObject")])
-  ObjectDistance[,ObjectNr := gsub("DistToObject", "", variable)][,Time := rep(MouseData$bodyparts_coords/FrameRate, times = ObjectNumber)][,variable:=NULL]
-  setnames(x = ObjectDistance, old = "value", new = "Distance")
-}
+# Generate distance table
+ObjectDistance <- data.table(Time = rep(DataSet$bodyparts_coords/FrameRate, times = 2), Distance = c(DataSet$DistToObject1, DataSet$DistToObject2), ObjectLoc = rep(c("1","2"), each = length(DataSet$bodyparts_coords)))
 ```
 
 We can then generate plots showing our computed parameters. Here we should check though which parameters are of importance and how to present them.    Furthermore, we will have to check for the object size and validate the pixel size to get later proper measurements.
 
 
 
-The first plot (A) shows the trajectory of the animal and in colour code the speed at the given segment. This might indicate where the animal is standing still and where it is just running from A to B. We will take a look at B the density of the location. This shows the likelihood of the animal being at any given point on the map. Yellow will indicate a high probability of the animal visiting the spot. Blue is very low or not even visited once. I also added the objects as circles. The size of course is not correct and would need to be changed according to the real object (I guess but it is not the highest priority). 
+We will take a look at the density of the location. This shows the likelihood of the animal being at any given point on the map. Yellow will indicate a high probability of the animal visiting the spot. Blue is very low or not even visited once. I also added the objects as circles. The size of course is not correct and would need to be changed according to the real object (I guess but it is not the highest priority).
 
 ![](README_figs/README-DensityPlot-1.png)<!-- -->
 
-The speed plot (A) is showing the change of speed over time. It looks like it might not change much but more analysis could indicate a trend that they are just moving less in the end due to boredom or exhaustion. Similarly to the speed the distance (B) over time as cumulative distance could also be a measure of exploration. A linear relationship would mean equal exploration whereas a flattend curve would mean less exploration in the end.
+The second plot shows the trajectory of the animal and in colour code the speed at the given segment. This might This will indicate where the animal is standing still and where it is just running from A to B.
 
 ![](README_figs/README-unnamed-chunk-2-1.png)<!-- -->
 
-The object distance plot (C) shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration. Further we can explore the angle with which the animal is looking at the objects (B and C) for each object.
+The speed plot is showing the change of speed over time. It looks like it might not change much but more analysis could indicate a trend that they are just moving less in the end due to boredom or exhaustion.
 
 ![](README_figs/README-unnamed-chunk-3-1.png)<!-- -->
+Similarly to the speed the distance over time as cumulative distance could also be a measure of exploration. A linear relationship would mean equal exploration whereas a flattend curve would mean less exploration in the end.
+
+![](README_figs/README-unnamed-chunk-4-1.png)<!-- -->
+
+The object distance plot shows the distance to object 1 and 2 at any given point in time. This plot would show a continous preference or equally distributed exploration.
+
+![](README_figs/README-unnamed-chunk-5-1.png)<!-- -->
