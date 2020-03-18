@@ -1,4 +1,14 @@
 # Function to calculate angle (radians) between 2 vectors
+#' Calculate angle between two vectors
+#'
+#' This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
+#' @param CoordTable A table including coordinates of labels.
+#' @param VectorStart A table including the objects.
+#' @param VectorEnd A vector string indicating the labels used for computing object angle.
+#' @param OutputName A string indicating the label used for object angle.
+#'
+#' @return Modifies existing DataTable.
+#' @export
 AngleCalc <- function(CoordTable,
                       VectorStart,
                       VectorEnd,
@@ -13,7 +23,17 @@ AngleCalc <- function(CoordTable,
                                       y = (get(paste0(VectorStart, "_y"))-get(paste0(VectorEnd, "_y")))),]
 }
 
-# Function to subtract angle (radians)
+#' Calculate difference between two angles (radians)
+#'
+#' This function calculates the difference between two angles from a reference 
+#' to objects from an object table and adds the resulting distances to the DataTable as columns.
+#' @param CoordTable A table including coordinates of labels.
+#' @param Angle1 A double indicating the angle in radians.
+#' @param Angle2 A double indicating the angle in radians.
+#' @param OutputName A string indicating for the output angle difference.
+#'
+#' @return Modifies existing DataTable.
+#' @export
 AngleDiff <- function(CoordTable,
                       Angle1,
                       Angle2,
@@ -25,7 +45,7 @@ AngleDiff <- function(CoordTable,
   }
   OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
   CoordTable[,tmp := get(x = Angle1)-get(x = Angle2),][
-    tmp > pi, tmp:=(tmp - pi*2)][
+    tmp > pi, tmp := (tmp - pi*2)][
       tmp < -pi, tmp:=(tmp + pi*2)]
   data.table::setnames(x = CoordTable, old = "tmp", new = OutputName)
 }

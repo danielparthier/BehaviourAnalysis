@@ -2,7 +2,7 @@
 % Please edit documentation in R/SpeedDistCumDist.R
 \name{DistSpeedCalc}
 \alias{DistSpeedCalc}
-\title{Function to calculate Speed/Distance/Cumulative distance}
+\title{Speed/Distance/Cumulative distance}
 \usage{
 DistSpeedCalc(CoordTable, SpeedRef, Interval)
 }
@@ -14,8 +14,8 @@ DistSpeedCalc(CoordTable, SpeedRef, Interval)
 \item{Interval}{A double corresponding to sampling rate.}
 }
 \value{
-Returns a data.frame which includes the labels and the directory to the folders.
+Modifies existing DataTable.
 }
 \description{
-This function will get the directory for any given label by opening a user interaction.
+This function calculates the speed, distance, and cumulative distance and add them as DataTable column.
 }

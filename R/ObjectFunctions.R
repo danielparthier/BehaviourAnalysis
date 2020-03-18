@@ -1,9 +1,9 @@
 #' Calculate distance to objects 
 #'
-#' This function will calculate the speed, distance, and cumulative distance and add them as DataTable column.
+#' This function calculates the distance from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
 #' @param CoordTable A table including coordinates of labels.
 #' @param ObjectTable A table including the objects.
-#' @param ObjectLabels A vector string indicating the labels used for computing object distances
+#' @param ObjectLabels A vector string indicating the labels used for computing object distances.
 #' @param Ref A string indicating the label used for object distance.
 #'
 #' @return Modifies existing DataTable.
@@ -27,14 +27,26 @@ ObjectDistance <- function(CoordTable,
   }
 }
 
-# Calculate angle to objects
-ObjectAngle <- function(CoordTable, ObjectTable, ObjectLabels, Ref) {
+#' Calculate angle to objects 
+#'
+#' This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
+#' @param CoordTable A table including coordinates of labels.
+#' @param ObjectTable A table including the objects.
+#' @param ObjectLabels A vector string indicating the labels used for computing object angle.
+#' @param Ref A string indicating the label used for object angle.
+#'
+#' @return Modifies existing DataTable.
+#' @export
+ObjectAngle <- function(CoordTable,
+                        ObjectTable,
+                        ObjectLabels,
+                        Ref) {
   for(i in 1:dim(ObjectTable)[1]) {
     ObjectName <- ObjectTable[i, ObjectLoc]
     AngleName <- VariableNameCheck(DataTable = CoordTable,
                                    NameString = paste0(ObjectName, "_", Ref, "_Angle"))
-    CoordTable[,tmp_x:=ObjectTable[ObjectLoc==eval(ObjectName),x]][
-      ,tmp_y:=ObjectTable[ObjectLoc==eval(ObjectName),y]]
+    CoordTable[,tmp_x := ObjectTable[ObjectLoc==eval(ObjectName),x],][
+      ,tmp_y:=ObjectTable[ObjectLoc==eval(ObjectName),y],]
     AngleCalc(CoordTable = CoordTable,
               VectorStart = "tmp",
               VectorEnd = Ref,

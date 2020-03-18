@@ -1,4 +1,13 @@
-# Function to calculate centroid
+#' Calculate centroid
+#'
+#' This function calculates the centroid of object with .
+#' @param CoordTable DataTable with coordinates.
+#' @param CornerNames A vector string with labels .
+#' @param ReferenceColumn A string indicating the reference column.
+#' @param OutputName A string for output.
+#' 
+#' @return Add centroid coordinates
+#' @export
 AddCentroid <- function(CoordTable,
                         CornerNames,
                         ReferenceColumn,
@@ -39,7 +48,14 @@ AddCentroid <- function(CoordTable,
   }
 }
 
-# Wrapper for centroid calculation
+#' Wrapper for centroid calculation
+#'
+#' This function calculates the centroid of object with .
+#' @param CoordTable DataTable with coordinates.
+#' @param MouseLabels A vector string with labels.
+#' 
+#' @return Add centroid coordinates
+#' @export
 CentroidCollect <- function(CoordTable,
                             MouseLabels){
   for(i in 1:length(MouseLabels)) {

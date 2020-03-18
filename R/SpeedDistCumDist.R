@@ -1,6 +1,6 @@
 #' Speed/Distance/Cumulative distance 
 #'
-#' This function will calculate the speed, distance, and cumulative distance and add them as DataTable column.
+#' This function calculates the speed, distance, and cumulative distance and add them as DataTable column.
 #' @param CoordTable A table including coordinates of labels.
 #' @param SpeedRef A string indicating the label used for computing speed.
 #' @param Interval A double corresponding to sampling rate.

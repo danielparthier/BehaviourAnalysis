@@ -1,6 +1,6 @@
 #' Vector Length
 #'
-#' This function will calculate the vector length of two points at any given point in time.
+#' This function calculates the vector length of two points at any given point in time.
 #' @param CoordTable A table including coordinates of labels.
 #' @param VectorStart A string indicating the label used for start of vector.
 #' @param VectorEnd A string indicating the label used for end of vector.

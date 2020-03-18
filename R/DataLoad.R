@@ -1,11 +1,20 @@
-# Loads data and generates coordinate table and object table
+#' Load data and generate coordinate table and object table
+#'
+#' This function generates a DataTable from a csv exported with DeepLabCut and computes parameters as Speed/Distance, and other object related features.
+#' @param FileName Name of CSV file including the path.
+#' @param FrameRate A double indicating the frame rate.
+#' @param MouseLabels A vector string indicating the labels used.
+#' @param ObjectLabels A string indicating the label used for object.
+#' @param ObjectNumber An integer indicating the number of objects.
+#' @import data.table
+#' 
+#' @return Generate DataTable from CSV file
+#' @export
 DeepLabCutLoad <- function(FileName,
                            FrameRate,
                            MouseLabels,
                            ObjectLabels,
-                           ObjectNumber,
-                           SpeedRef,
-                           PlaceRef) {
+                           ObjectNumber) {
   DataSet <- data.table::fread(file = FileName, skip = 2)
   LabelNames <- data.table::fread(file = FileName, nrows = 1)
   
@@ -23,7 +32,7 @@ DeepLabCutLoad <- function(FileName,
                                                     pattern = "likelihood",
                                                     ignore.case = T)
                         & data.table::like(vector = names(DataSet),
-                                           pattern = paste0(c(unique(unlist(MouseBodyList)), "bodyparts"), collapse = "|"),
+                                           pattern = paste0(c(unique(unlist(MouseLabels)), "bodyparts"), collapse = "|"),
                                            ignore.case = T)]
   # Rename to frame and calculate time
   data.table::setnames(x = CoordTable, old = "bodyparts_coords", new = "frame")
