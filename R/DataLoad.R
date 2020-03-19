@@ -6,6 +6,8 @@
 #' @param MouseLabels A vector string indicating the labels used.
 #' @param ObjectLabels A string indicating the label used for object.
 #' @param ObjectNumber An integer indicating the number of objects.
+#' @param xScale A double representing the scaling factor.
+#' @param yScale A double representing the scaling factor.
 #' @import data.table
 #' 
 #' @return Generate DataTable from CSV file
@@ -14,7 +16,9 @@ DeepLabCutLoad <- function(FileName,
                            FrameRate,
                            MouseLabels,
                            ObjectLabels,
-                           ObjectNumber) {
+                           ObjectNumber,
+                           xScale = 1,
+                           yScale = 1) {
   DataSet <- data.table::fread(file = FileName, skip = 2)
   LabelNames <- data.table::fread(file = FileName, nrows = 1)
   
@@ -23,8 +27,11 @@ DeepLabCutLoad <- function(FileName,
   colnames(DataSet) <- ColumnNames
   # Correct for inverse y coordinates
   DataSet[, (grep("_y", colnames(DataSet))) := 
-            (lapply(.SD, function(x){-x})), 
+            (lapply(.SD, function(x){-x*yScale})), 
           .SDcols = grep("_y", colnames(DataSet))]
+  DataSet[, (grep("_x", colnames(DataSet))) := 
+            (lapply(.SD, function(x){x*xScale})), 
+          .SDcols = grep("_x", colnames(DataSet))]
   
   # Generate mouse table with bodyparts
   CoordTable <- DataSet[,.SD,
@@ -32,10 +39,10 @@ DeepLabCutLoad <- function(FileName,
                                                     pattern = "likelihood",
                                                     ignore.case = T)
                         & data.table::like(vector = names(DataSet),
-                                           pattern = paste0(c(unique(unlist(MouseLabels)), "bodyparts"), collapse = "|"),
+                                           pattern = paste0(c(unique(unlist(MouseLabels)), ColumnNames[1]), collapse = "|"),
                                            ignore.case = T)]
   # Rename to frame and calculate time
-  data.table::setnames(x = CoordTable, old = "bodyparts_coords", new = "frame")
+  data.table::setnames(x = CoordTable, old = ColumnNames[1], new = "frame")
   CoordTable[,Time:=frame/FrameRate,]
   CentroidCollect(CoordTable = CoordTable, MouseLabels = MouseLabels)
   
