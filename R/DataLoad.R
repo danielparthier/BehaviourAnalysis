@@ -70,6 +70,8 @@ DeepLabCutLoad <- function(FileName,
   }
   OutputTable <- list()
   OutputTable$DataTable <- CoordTable
-  OutputTable$ObjectTable <- ObjectCoord
+  if(ObjectNumber > 0) {
+    OutputTable$ObjectTable <- ObjectCoord
+  }
   return(OutputTable)
 }
