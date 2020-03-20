@@ -16,14 +16,16 @@ ObjectDistance <- function(CoordTable,
     ObjectName <- ObjectTable[i, ObjectLoc]
     DistanceName <- VariableNameCheck(DataTable = CoordTable,
                                       NameString = paste0(ObjectName, "_", Ref, "_Distance"))
-    CoordTable[,tmp_x:=ObjectTable[ObjectLoc==eval(ObjectName),x]][
-      ,tmp_y:=ObjectTable[ObjectLoc==eval(ObjectName),y]]
+    objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
+    objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
+    CoordTable[,"tmp_x" := objX,][
+      ,"tmp_y" := objY,]
     VectorLength(CoordTable = CoordTable,
                  VectorStart = "tmp",
                  VectorEnd = Ref,
                  OutputName = DistanceName)
-    CoordTable[,tmp_x:=NULL][
-      ,tmp_y:=NULL]
+    CoordTable[,"tmp_x":= NULL,][
+      ,"tmp_y":= NULL,]
   }
 }
 
@@ -45,14 +47,16 @@ ObjectAngle <- function(CoordTable,
     ObjectName <- ObjectTable[i, ObjectLoc]
     AngleName <- VariableNameCheck(DataTable = CoordTable,
                                    NameString = paste0(ObjectName, "_", Ref, "_Angle"))
-    CoordTable[,tmp_x := ObjectTable[ObjectLoc==eval(ObjectName),x],][
-      ,tmp_y:=ObjectTable[ObjectLoc==eval(ObjectName),y],]
+    objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
+    objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
+    CoordTable[,"tmp_x" := objX,][
+      ,"tmp_y" := objY,]
     AngleCalc(CoordTable = CoordTable,
               VectorStart = "tmp",
               VectorEnd = Ref,
               OutputName = AngleName)
-    CoordTable[,tmp_x:=NULL][
-      ,tmp_y:=NULL]
+    CoordTable[,"tmp_x":= NULL,][
+      ,"tmp_y":= NULL,]
   }
 }
 

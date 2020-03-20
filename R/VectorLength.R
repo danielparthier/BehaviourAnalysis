@@ -8,7 +8,6 @@
 #'
 #' @return Modifys existing DataTable.
 #' @export
-# Function to calculate vector length
 VectorLength <- function(CoordTable,
                          VectorStart,
                          VectorEnd,

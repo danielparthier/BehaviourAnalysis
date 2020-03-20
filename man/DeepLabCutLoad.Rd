@@ -4,7 +4,15 @@
 \alias{DeepLabCutLoad}
 \title{Load data and generate coordinate table and object table}
 \usage{
-DeepLabCutLoad(FileName, FrameRate, MouseLabels, ObjectLabels, ObjectNumber)
+DeepLabCutLoad(
+  FileName,
+  FrameRate,
+  MouseLabels,
+  ObjectLabels,
+  ObjectNumber,
+  xScale = 1,
+  yScale = 1
+)
 }
 \arguments{
 \item{FileName}{Name of CSV file including the path.}
@@ -16,6 +24,10 @@ DeepLabCutLoad(FileName, FrameRate, MouseLabels, ObjectLabels, ObjectNumber)
 \item{ObjectLabels}{A string indicating the label used for object.}
 
 \item{ObjectNumber}{An integer indicating the number of objects.}
+
+\item{xScale}{A double representing the scaling factor.}
+
+\item{yScale}{A double representing the scaling factor.}
 }
 \value{
 Generate DataTable from CSV file

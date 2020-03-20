@@ -43,7 +43,7 @@ DeepLabCutLoad <- function(FileName,
                                            ignore.case = T)]
   # Rename to frame and calculate time
   data.table::setnames(x = CoordTable, old = ColumnNames[1], new = "frame")
-  CoordTable[,Time:=frame/FrameRate,]
+  CoordTable[,"Time":=frame/FrameRate,]
   CentroidCollect(CoordTable = CoordTable, MouseLabels = MouseLabels)
   
   if(ObjectNumber > 0) {
