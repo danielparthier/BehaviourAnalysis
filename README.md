@@ -220,11 +220,11 @@ ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlot.pdf", device = "p
 ```
 
 The plot for speed (2D) and occupancy (2D):
-<img src="README_figs/README-OutPutPlotMap-1.png" width="960" height="480" />
+<img src="README_figs/README-OutPutPlotMap-1.png" width="800" height="400" />
 The plot for speed (1D) and Distance (1D):
-<img src="README_figs/README-OutPutPlotMovement-1.png" width="960" height="480" />
+<img src="README_figs/README-OutPutPlotMovement-1.png" width="800" height="400" />
 The plot for stationary object distances:
-<img src="README_figs/README-ObjectDistancePlotLine-1.png" width="960" height="480" />
+<img src="README_figs/README-ObjectDistancePlotLine-1.png" width="800" height="400" />
 The plots for speed, object approach angle for both objects, and the
 distance to the objects over time:
 <img src="README_figs/README-MovementPlot-1.png" width="800" height="400" />
@@ -232,7 +232,7 @@ distance to the objects over time:
 The last plot shows the rearing measured as the length of the body. If
 the animal is walking normally the vector length will be long. If the
 animal rears, meaning it will get up, the vector will be shorter.
-<img src="README_figs/README-OutPutPlotRearing-1.png" width="960" height="480" />
+<img src="README_figs/README-OutPutPlotRearing-1.png" width="800" height="400" />
 
 Any further adjustments or changes to the plot can be appended. For
 example when a different label is required one can add the `ggplot2`
@@ -249,11 +249,13 @@ RearingPlot+
     ## Scale for 'colour' is already present. Adding another scale for 'colour',
     ## which will replace the existing scale.
 
-<img src="README_figs/README-ChangeAxis-1.png" width="560" height="480" />
+![](README_figs/README-ChangeAxis-1.png)<!-- -->
 
 ``` r
 ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlotColourbar.pdf", device = "pdf", width = 5, height = 3)
 ```
+
+<img src="README_figs/README-ChangeAxisPlot-1.png" width="560" height="480" />
 
 The combination of functions and plotting features will allow for easier
 analysis of the `DeepLabCut` output and make data more approachable.
