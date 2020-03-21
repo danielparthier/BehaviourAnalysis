@@ -66,6 +66,8 @@ summary(MouseDataTable)
     ## DataTable   14     data.table list
     ## ObjectTable  3     data.table list
 
+## Calculate Egocentric Parameters
+
 The output of `MouseDataTable` will be a list consisting of two
 `data.table`s. The first one includes the egocentric coordinates of the
 mouse which are extracted from the labels provided in the
@@ -109,6 +111,8 @@ AngleDiff(CoordTable = MouseDataTable$DataTable,
           OutputName = "ViewAngle")
 ```
 
+## Calculate Stationary Object Parameters
+
 The object specific calculations can be performed in the same way.
 `ObjectDistance()` will calculate the distances from a reference point
 to **all** the objects in the `ObjectTable`. The calculation for the
@@ -135,6 +139,8 @@ AddCentroid(CoordTable = MouseDataTable$DataTable,
             ReferenceColumn = "frame",
             OutputName = "BetweenEars")
 ```
+
+## Plotting Data
 
 The data can be plotted using functions and strings as references. For
 some functions 2D and 1D options are available, meaning if `x` and `y`

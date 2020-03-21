@@ -47,7 +47,7 @@ MouseDataTable <- DeepLabCutLoad(FileName = FileName,
 summary(MouseDataTable)
 
 ```
-
+## Calculate Egocentric Parameters
 The output of `MouseDataTable` will be a list consisting of two `data.table`s. The first one includes the egocentric coordinates of the mouse which are extracted from the labels provided in the `MouseBodyList` and the second one will give the table for stationary objects from the `ObjectList`. If an object is in the list of stationary objects coordinates will be adjusted and fixed. If the interest is in objects which move, and this is something which should be kept as information, it is recommended to put the labels in the `MouseBodyList` and assign them with for example `MouseBodyList$object` or another clear description. The input argument for `DeepLabCutLoad` should be including `ObjectNumber = 0`. The argument `ObjectLabels` will then be ignored.
 
 The package offers some basic functions which allow you to calculate **speed**, **distance**, **length** or **angle** etc. for different structures. In this example functions can be applied to the coordinate table.
@@ -78,6 +78,7 @@ AngleDiff(CoordTable = MouseDataTable$DataTable,
           OutputName = "ViewAngle")
 ```
 
+## Calculate Stationary Object Parameters
 The object specific calculations can be performed in the same way. `ObjectDistance()` will calculate the distances from a reference point to **all** the objects in the `ObjectTable`. The calculation for the approaching angle is performed in a similar manner using `ObjectAngle()`. The `AddCentroid()` function allows to compute the centroid of a multi-label structure. This helps to evaluate a position of an object or can reduce noise.
 
 ```{r ObjectFunctions, warning=F}
@@ -99,6 +100,7 @@ AddCentroid(CoordTable = MouseDataTable$DataTable,
             OutputName = "BetweenEars")
 ```
 
+## Plotting Data
 The data can be plotted using functions and strings as references. For some functions 2D and 1D options are available, meaning if `x` and `y` are valid references a 2D-plot is generated showing the trajectory and the target parameter in colour code. The `LocationPlot()` further has the option to output the density/probability of occupancy. The other possible functions are `SpeedPlot()`, `AnglePlot()`, `DistancePlot()`, and `LengthPlot()` with their 1D and 2D functionality. Currently, the plots are implemented with colour blind friendly colour schemes.
 
 ```{r PlottingFunctions1, warning=F}
@@ -171,24 +173,24 @@ ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlot.pdf", device = "p
 ```
 
 The plot for speed (2D) and occupancy (2D):
-```{r OutPutPlotMap, echo=F, warning=F, dpi=250}
+```{r OutPutPlotMap, echo=F, warning=F, dpi=250, fig.height=3, fig.width=7}
 OutPutPlotMap
 ```
 The plot for speed (1D) and Distance (1D):
-```{r OutPutPlotMovement, echo=F, warning=F, dpi=250}
+```{r OutPutPlotMovement, echo=F, warning=F, dpi=250, fig.height=3, fig.width=6}
 OutPutPlotMovement
 ```
 The plot for stationary object distances:
-```{r ObjectDistancePlotLine, echo=F, warning=F, dpi=250}
+```{r ObjectDistancePlotLine, echo=F, warning=F, dpi=250, , fig.height=3, fig.width=6}
 ObjectDistancePlotLine
 ```
 The plots for speed, object approach angle for both objects, and the distance to the objects over time:
-```{r MovementPlot, echo=F, warning=F, dpi=250}
+```{r MovementPlot, echo=F, warning=F, dpi=250, fig.height=5, fig.width=10}
 MovementPlot
 ```
 
 The last plot shows the rearing measured as the length of the body. If the animal is walking normally the vector length will be long. If the animal rears, meaning it will get up, the vector will be shorter.
-```{r OutPutPlotRearing, echo=F, warning=F, dpi=250}
+```{r OutPutPlotRearing, echo=F, warning=F, dpi=250, fig.height=3, fig.width=6}
 OutPutPlotRearing
 ```
 
