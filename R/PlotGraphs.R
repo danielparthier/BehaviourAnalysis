@@ -153,7 +153,7 @@ DistancePlot <- function(DataTable,
                       y = NULL,
                       ObjectTable = NULL,
                       Unit = "px",
-                      ObjectDistance = T) {
+                      ObjectDistance = F) {
   if(is.null(x) & is.null(y) & is.character(Distance) & !ObjectDistance) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = "Time", y = Distance))+
       geom_line()+
