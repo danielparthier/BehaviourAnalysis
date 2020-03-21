@@ -173,30 +173,30 @@ ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlot.pdf", device = "p
 ```
 
 The plot for speed (2D) and occupancy (2D):
-```{r OutPutPlotMap, echo=F, warning=F, dpi=250, fig.height=3, fig.width=7, out.height=400, out.width=800}
+```{r OutPutPlotMap, echo=F, warning=F, dpi=250, fig.height=3.5, fig.width=8, out.height=350, out.width=800}
 OutPutPlotMap
 ```
 The plot for speed (1D) and Distance (1D):
-```{r OutPutPlotMovement, echo=F, warning=F, dpi=250, fig.height=3, fig.width=6, , out.height=400, out.width=800}
+```{r OutPutPlotMovement, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, , out.height=400, out.width=800}
 OutPutPlotMovement
 ```
 The plot for stationary object distances:
-```{r ObjectDistancePlotLine, echo=F, warning=F, dpi=250, , fig.height=3, fig.width=6, out.height=400, out.width=800}
+```{r ObjectDistancePlotLine, echo=F, warning=F, dpi=250, , fig.height=4, fig.width=8, out.height=400, out.width=800}
 ObjectDistancePlotLine
 ```
 The plots for speed, object approach angle for both objects, and the distance to the objects over time:
-```{r MovementPlot, echo=F, warning=F, dpi=250, fig.height=5, fig.width=10, out.height=400, out.width=800}
-OutPutPlotMap
+```{r MovementPlot, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, out.height=400, out.width=800}
+MovementPlot
 ```
 
 The last plot shows the rearing measured as the length of the body. If the animal is walking normally the vector length will be long. If the animal rears, meaning it will get up, the vector will be shorter.
-```{r OutPutPlotRearing, echo=F, warning=F, dpi=250, fig.height=3, fig.width=6, out.height=400, out.width=800}
+```{r OutPutPlotRearing, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, out.height=400, out.width=800}
 OutPutPlotRearing
 ```
 
 Any further adjustments or changes to the plot can be appended. For example when a different label is required one can add the `ggplot2` functions to the generated plot. In the following case we want to change the *"Length (px)"* to a more general *"Rearing"*. Further we will remove the numbers (*label*) next to the colour bar. Since it is a arbitrary measure absolute numbers might not be required.
 
-```{r ChangeAxis, warning=F, dpi=250, fig.height=3, fig.width=3.5}
+```{r ChangeAxis, warning=F}
 
 RearingPlot+
   scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE), direction = -1)
@@ -205,7 +205,7 @@ ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlotColourbar.pdf", de
 
 ```
 
-```{r ChangeAxisPlot, echo=F, warning=F, dpi=250, fig.height=3, fig.width=3.5, out.height=480, out.width=560}
+```{r ChangeAxisPlot, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, out.height=400, out.width=800}
 OutPutPlotRearing
 ```
 

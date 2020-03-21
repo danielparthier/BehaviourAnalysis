@@ -220,7 +220,7 @@ ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlot.pdf", device = "p
 ```
 
 The plot for speed (2D) and occupancy (2D):
-<img src="README_figs/README-OutPutPlotMap-1.png" width="800" height="400" />
+<img src="README_figs/README-OutPutPlotMap-1.png" width="800" height="350" />
 The plot for speed (1D) and Distance (1D):
 <img src="README_figs/README-OutPutPlotMovement-1.png" width="800" height="400" />
 The plot for stationary object distances:
@@ -255,7 +255,7 @@ RearingPlot+
 ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlotColourbar.pdf", device = "pdf", width = 5, height = 3)
 ```
 
-<img src="README_figs/README-ChangeAxisPlot-1.png" width="560" height="480" />
+<img src="README_figs/README-ChangeAxisPlot-1.png" width="800" height="400" />
 
 The combination of functions and plotting features will allow for easier
 analysis of the `DeepLabCut` output and make data more approachable.
