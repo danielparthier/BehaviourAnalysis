@@ -186,7 +186,7 @@ ObjectDistancePlotLine
 ```
 The plots for speed, object approach angle for both objects, and the distance to the objects over time:
 ```{r MovementPlot, echo=F, warning=F, dpi=250, fig.height=5, fig.width=10, out.height=400, out.width=800}
-MovementPlot
+OutPutPlotMap
 ```
 
 The last plot shows the rearing measured as the length of the body. If the animal is walking normally the vector length will be long. If the animal rears, meaning it will get up, the vector will be shorter.
