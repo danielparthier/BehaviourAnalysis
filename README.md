@@ -249,13 +249,11 @@ RearingPlot+
     ## Scale for 'colour' is already present. Adding another scale for 'colour',
     ## which will replace the existing scale.
 
-![](README_figs/README-ChangeAxis-1.png)<!-- -->
+<img src="README_figs/README-ChangeAxis-1.png" width="500" height="400" />
 
 ``` r
 ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlotColourbar.pdf", device = "pdf", width = 5, height = 3)
 ```
-
-<img src="README_figs/README-ChangeAxisPlot-1.png" width="800" height="400" />
 
 The combination of functions and plotting features will allow for easier
 analysis of the `DeepLabCut` output and make data more approachable.

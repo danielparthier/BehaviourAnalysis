@@ -196,7 +196,7 @@ OutPutPlotRearing
 
 Any further adjustments or changes to the plot can be appended. For example when a different label is required one can add the `ggplot2` functions to the generated plot. In the following case we want to change the *"Length (px)"* to a more general *"Rearing"*. Further we will remove the numbers (*label*) next to the colour bar. Since it is a arbitrary measure absolute numbers might not be required.
 
-```{r ChangeAxis, warning=F}
+```{r ChangeAxis, warning=F, dpi=250, fig.height=4, fig.width=5, out.height=400, out.width=500}
 
 RearingPlot+
   scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE), direction = -1)
@@ -204,10 +204,5 @@ RearingPlot+
 ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlotColourbar.pdf", device = "pdf", width = 5, height = 3)
 
 ```
-
-```{r ChangeAxisPlot, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, out.height=400, out.width=800}
-OutPutPlotRearing
-```
-
 
 The combination of functions and plotting features will allow for easier analysis of the `DeepLabCut` output and make data more approachable. Future features will include measures to quantify behaviour and adjustments to object plotting and analysis allowing for more flexibility.
