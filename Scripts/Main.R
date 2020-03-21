@@ -1,7 +1,8 @@
 # Main script to process data
-library(magrittr)
 library(BehaviouR)
 library(ggplot2)
+library(patchwork)
+
 FileName <- paste0("RawData/20180903_Schmitz_PaS_B1_C1_NL_",
                    "Day1_NOVEL_DSC001663DLC_resnet50_NOVEL_",
                    "VIDEONov7shuffle1_100000.csv")
@@ -67,7 +68,7 @@ AddCentroid(CoordTable = MouseDataTable$DataTable,
             ReferenceColumn = "frame",
             OutputName = "BetweenEars")
 
-
+# Plot functions
 SpeedPlot <- SpeedPlot(DataTable = MouseDataTable$DataTable,
                        Speed = "SpeedbodyCentroid",
                        x = "headCentroid_x",
@@ -85,42 +86,45 @@ if(ObjectNumber>0) {
   ObjectAnglePlots <- lapply(X = 1:ObjectNumber, FUN = function(objID) {
     AnglePlot(DataTable = MouseDataTable$DataTable,
               Angle = paste0("object_",objID,"_headCentroid_Angle"),
-              x = "bodyCentroid_x",
-              y = "bodyCentroid_y",
+              x = "headCentroid_x",
+              y = "headCentroid_y",
               ObjectTable = MouseDataTable$ObjectTable,
-              colourScheme = "dark")
+              colourScheme = "light")
   })   
 }
 
 
-SpeedPlotLine <- SpeedPlot(DataTable = MouseDataTable$DataTable, Speed = "SpeedbodyCentroid")
+SpeedPlotLine <- SpeedPlot(DataTable = MouseDataTable$DataTable,
+                           Speed = "SpeedbodyCentroid")
 
-DistancePlotLine <- ggplot(data = MouseDataTable$DataTable, aes(x = bodyparts_coords/FrameRate, y = CumDist))+
-  geom_line()+
-  scale_x_continuous(expand = c(0,0))+
-  scale_y_continuous(expand = c(0,0))+
-  ylab("Distance Travelled (px)")+
-  xlab("Time (s)")+
-  theme_classic()+
-  theme(legend.title.align=0.5)
+DistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
+                                 Distance = "CumDistbodyCentroid")
 
-ObjectDistancePlotLine <- ggplot(data = ObjectDistance, aes(x = Time, y = Distance, group = ObjectNr, colour = ObjectNr))+
-  geom_line()+
-  scale_x_continuous(expand = c(0,0))+
-  scale_y_continuous(expand = c(0,0))+
-  scale_color_viridis(discrete=TRUE)+
-  labs(colour = "Object")+
-  ylab("Distance to Object (px)")+
-  xlab("Time (s)")+
-  theme_classic()+
-  theme(legend.title.align=0.5)
+ObjectDistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
+                                       Distance = "headCentroid_Distance",
+                                       ObjectTable = MouseDataTable$ObjectTable,
+                                       ObjectDistance = T)
+
+RearingPlotLine <- LengthPlot(DataTable = MouseDataTable$DataTable,
+                              Length = "BodyLength")
+
+RearingPlot <- LengthPlot(DataTable = MouseDataTable$DataTable,
+                          Length = "BodyLength",
+                          x = "headCentroid_x",
+                          y = "headCentroid_y",
+                          ObjectTable = MouseDataTable$ObjectTable)
 
 # Arrange Plots
-MovementPlot <- (SpeedPlot | ObjectAnglePlots[[1]] | ObjectAnglePlots[[2]]) / ObjectDistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24))
+if(ObjectNumber>0) {
+  MovementPlot <- (SpeedPlot | ObjectAnglePlots[[1]] | ObjectAnglePlots[[2]]) / ObjectDistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24))
+  ggsave(plot = MovementPlot, filename = "Plots/MovementPlotLight.pdf", device = "pdf", width = 10.4, height = 6)
+}
+
+OutPutPlotRearing <- RearingPlotLine + RearingPlot
 OutPutPlotMap <- SpeedPlot + DensityPlot + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
 OutPutPlotMovement <- SpeedPlotLine + DistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
 
-ggsave(plot = MovementPlot, filename = "Plots/MovementPlot.pdf", device = "pdf", width = 10.4, height = 6)
 ggsave(plot = OutPutPlotMap, filename = "Plots/OutPutPlotMap.pdf", device = "pdf", width = 10.4, height = 4)
 ggsave(plot = OutPutPlotMovement, filename = "Plots/OutPutPlotMovement.pdf", device = "pdf", width = 10.4, height = 4)
 ggsave(plot = ObjectDistancePlotLine, filename = "Plots/ObjectDistancePlotLine.pdf", device = "pdf", width = 5, height = 3)
+ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlot.pdf", device = "pdf", width = 5, height = 3)

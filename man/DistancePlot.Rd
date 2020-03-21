@@ -11,7 +11,7 @@ DistancePlot(
   y = NULL,
   ObjectTable = NULL,
   Unit = "px",
-  ObjectDistance = T
+  ObjectDistance = F
 )
 }
 \arguments{

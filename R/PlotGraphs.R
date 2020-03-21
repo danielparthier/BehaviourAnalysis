@@ -5,6 +5,7 @@
 #' @param n An interger indicating length of output.
 #'
 #' @return Returns a vector string containing colours in hex-code.
+#' @import ggplot2
 #' @export
 CustomColourPalette <- function(Mode = "dark", n = 5) {
   if(is.character(Mode) & length(Mode)==1) {
@@ -64,8 +65,8 @@ SpeedPlot <- function(DataTable,
     return(OutputPlot)
   } else if(is.character(x) & is.character(y) & is.character(Speed)) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y, colour = Speed))+
-      geom_path(size=1)+
-      scale_color_viridis()+
+      geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
+      scale_color_viridis_c()+
       labs(colour = paste0("Speed\n(", Unit, ")"))+
       theme_void()+
       theme(legend.title.align=0.5)
@@ -104,7 +105,7 @@ LocationPlot <- function(DataTable,
   if(is.character(x) & is.character(y) & Density) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y))+
       stat_density_2d(geom = "raster", aes(fill = stat(density)), contour = FALSE, n = c(BinNumber, BinNumber))+
-      scale_fill_viridis()+
+      scale_fill_viridis_c()+
       labs(fill = "Density")+
       theme_void()+
       theme(legend.title.align=0.5)
@@ -117,7 +118,7 @@ LocationPlot <- function(DataTable,
     return(OutputPlot)
   } else if(is.character(x) & is.character(y) & !Density) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y))+
-      geom_path(size=1, colour = "black")+
+      geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1, colour = "black")+
       theme_void()+
       theme(legend.title.align=0.5)
     if(is.data.table(ObjectTable)) {
@@ -166,8 +167,8 @@ DistancePlot <- function(DataTable,
     return(OutputPlot)
   } else if(is.character(x) & is.character(y) & is.character(Distance) & !ObjectDistance) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y, colour = Distance))+
-      geom_path(size=1)+
-      scale_color_viridis()+
+      geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
+      scale_color_viridis_C()+
       labs(colour = paste0("Distance\n(", Unit, ")"))+
       theme_void()+
       theme(legend.title.align=0.5)
@@ -234,9 +235,60 @@ AnglePlot <- function(DataTable,
   } else if(is.character(x) & is.character(y) & is.character(Angle)) {
     tmpFrame <- data.frame(AngleVec = DataTable[[Angle]]*180/pi, x = DataTable[[x]], y = DataTable[[y]])
     OutputPlot <- ggplot(data = tmpFrame, aes(x = x, y = y, colour = AngleVec))+
-      geom_path(size=1)+
+      geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       labs(colour = "Angle\n(degrees)")+
       scale_color_gradientn(colours = CustomColourPalette(Mode = colourScheme, n = 5), limits = c(-180,180), breaks = c(-180, -90, 0, 90, 180))+
+      theme_void()+
+      theme(legend.title.align=0.5)
+    if(is.data.table(ObjectTable)) {
+      labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
+      OutputPlot <- OutputPlot+
+        geom_point(data = ObjectTable, aes(x = x, y = y), shape = 21, colour = "black", alpha = 0.5, size = 8, stroke = 2)+
+        annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)
+    }
+    return(OutputPlot)
+  } else {
+    warning("Missing arguments")
+  }
+}
+
+#' Plot Length
+#'
+#' This function plots the Length of the object used as Length reference. When adding the x/y 
+#' references a 2D-plot is drawn using colour-coding for the Length If the x/y inforamtion 
+#' is omitted the Length will be plotted against time. The length of a vector can be used to 
+#' estimate rearing or other postures. 
+#' @param DataTable A data.table used as input.
+#' @param Length A string referencing the Length column.
+#' @param x A string referencing the x-cordinate column.
+#' @param y A string referencing the y-cordinate column.
+#' @param ObjectTable Optional data.table with Objects.
+#' @param Unit A string indicating the speed unit (default = "px").
+#' @param ColourFlip A bool indicating the whether colour scheme should be inverted (default = TRUE).
+#' @return Returns a ggplot.
+#' @export
+LengthPlot <- function(DataTable,
+                      Length,
+                      x = NULL,
+                      y = NULL,
+                      ObjectTable = NULL,
+                      Unit = "px",
+                      ColourFlip = T) {
+  if(is.null(x)&is.null(y)&is.character(Length)) {
+    OutputPlot <- ggplot(data = DataTable, aes_string(x = "Time", y = Length))+
+      geom_line()+
+      scale_x_continuous(expand = c(0,0))+
+      scale_y_continuous(expand = c(0,0))+
+      ylab(label = paste0("Length (", Unit, ")"))+
+      xlab(label = "Time (s)")+
+      theme_classic()+
+      theme(legend.title.align=0.5)
+    return(OutputPlot)
+  } else if(is.character(x) & is.character(y) & is.character(Length)) {
+    OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y, colour = Length))+
+      geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
+      scale_color_viridis_c(direction = ifelse(test = ColourFlip, yes = -1, no = 1))+
+      labs(colour = paste0("Length\n(", Unit, ")"))+
       theme_void()+
       theme(legend.title.align=0.5)
     if(is.data.table(ObjectTable)) {
