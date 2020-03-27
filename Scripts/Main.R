@@ -26,6 +26,7 @@ MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  yScale = 1,
                                  JumpCorrections = T)
 
+
 # compute body motion properties
 DistSpeedCalc(CoordTable = MouseDataTable$DataTable,
               SpeedRef = "bodyCentroid",

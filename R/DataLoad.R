@@ -23,8 +23,7 @@ DeepLabCutLoad <- function(FileName,
                            xScale = 1,
                            yScale = 1,
                            JumpCorrections = T,
-                           interpWindow = 21,
-                           cutWindow = 2) {
+                           interpWindow = 21) {
   DataSet <- data.table::fread(file = FileName, skip = 2)
   LabelNames <- data.table::fread(file = FileName, nrows = 1)
   
@@ -55,18 +54,11 @@ DeepLabCutLoad <- function(FileName,
     CoordinateCols <- c(grep("_x", colnames(CoordTable)), grep("_y", colnames(CoordTable)))
     for(i in CoordinateCols) {
       TargetCol <- colnames(CoordTable)[i]
-      DTlength <- CoordTable[,.N]
-      par <- suppressWarnings(nlminb(x = diff(CoordTable[,get(TargetCol)]), fitDT, start = c(1,0))$par)
-      DetectedJumps <- (1:DTlength)[dt(x = diff(CoordTable[,get(TargetCol)])-par[2], df = par[1], log = T) < -10]+1
-      if(length(DetectedJumps)!=0 & !is.null(DetectedJumps)) {
-        CoordInterp(CoordTable = CoordTable,
+      CoordInterp(CoordTable = CoordTable,
                     CoordRef = TargetCol,
-                    MissLoc = DetectedJumps,
-                    interpWindow = interpWindow,
-                    cutWindow = cutWindow) 
+                    interpWindow = interpWindow) 
       }
     }
-  }
   
   CoordTable[,"Time":=frame/FrameRate,]
   CentroidCollect(CoordTable = CoordTable, MouseLabels = MouseLabels)
@@ -108,30 +100,50 @@ DeepLabCutLoad <- function(FileName,
   return(OutputTable)
 }
 
-
-
+##### formula for fitting t-distribution
 fitDT <- function(par, x){
   -sum(dt(x = x-par[2], df = par[1], log = T))
 }
 
-CoordInterp <- function(CoordTable, CoordRef, MissLoc, interpWindow = 21, cutWindow = 2) {
-  MissLoc <- unique(as.vector(sapply(MissLoc, function(x) {seq(x-cutWindow, x+cutWindow, 1)})))
-  MissLoc <- MissLoc[MissLoc>0&MissLoc<CoordTable[,.N]]
-  jumpLength <- ifelse(test = floor(interpWindow-1)/2 > 4, yes = floor(interpWindow-1)/2, no = 21) 
-  startPoint <- ifelse(test = MissLoc[1]-jumpLength<0, yes = 1, no = MissLoc[1]-jumpLength)
-  endPoint <- ifelse(test = MissLoc[1]+jumpLength>CoordTable[,.N], yes = CoordTable[,.N], no = MissLoc[1]+jumpLength)
-  for(i in seq_along(MissLoc)) {
-    if (i<(length(MissLoc)) & (MissLoc[i+1]-MissLoc[i])<(interpWindow-1)/2) {
-      next
+##### Interpolation of coordinates
+CoordInterp <- function(CoordTable, CoordRef, interpWindow = 21) {
+  par <- suppressWarnings(nlminb(x = diff(CoordTable[,get(CoordRef)]),
+                                 fitDT,
+                                 start = c(1,0))$par)
+  MissLoc <- (1:CoordTable[,.N])[dt(x = diff(CoordTable[,get(CoordRef)])-par[2], df = par[1], log = T) < -10]+1
+  iteration <- 1
+  cutWindow <- 0
+  while(length(MissLoc)!=0 & !is.null(MissLoc) & iteration < 10) {
+    MissLoc <- unique(as.vector(sapply(MissLoc, function(x) {seq(x-cutWindow, x+cutWindow, 1)})))
+    MissLoc <- MissLoc[MissLoc>0&MissLoc<CoordTable[,.N]]
+    jumpLength <- ifelse(test = floor(interpWindow-1)/2 > 4, yes = floor(interpWindow-1)/2, no = 21) 
+    startPoint <- ifelse(test = MissLoc[1]-jumpLength<0, yes = 1, no = MissLoc[1]-jumpLength)
+    endPoint <- ifelse(test = MissLoc[1]+jumpLength>CoordTable[,.N], yes = CoordTable[,.N], no = MissLoc[1]+jumpLength)
+    for(i in seq_along(MissLoc)) {
+      if (i<(length(MissLoc)) & (MissLoc[i+1]-MissLoc[i])<(interpWindow-1)/2) {
+        next
+      }
+      endPoint <- MissLoc[i]+jumpLength
+      extractIDX <- MissLoc[data.table::between(x = MissLoc, lower = startPoint, upper = endPoint)]
+      tmpLoc <- MissLoc[data.table::between(x = MissLoc, lower = startPoint, upper = endPoint)]
+      modelSpline <- splines::interpSpline(obj2 = CoordTable[(startPoint:endPoint)[!(startPoint:endPoint) %in% tmpLoc],get(CoordRef)],
+                                           obj1 = (startPoint:endPoint)[!(startPoint:endPoint) %in% tmpLoc])
+      CoordTable[tmpLoc, eval(CoordRef) := predict(object = modelSpline,
+                                                   x = extractIDX)$y,]
+      if(i!=length(MissLoc)) {
+        startPoint <- MissLoc[i+1]-jumpLength
+        endPoint <- MissLoc[i+1]+jumpLength
+      }
     }
-    endPoint <- MissLoc[i]+jumpLength
-    extractIDX <- MissLoc[data.table::between(x = MissLoc, lower = startPoint, upper = endPoint)]
-    tmpLoc <- MissLoc[data.table::between(x = MissLoc, lower = startPoint, upper = endPoint)]
-    modelSpline <- splines::interpSpline(obj2 = CoordTable[(startPoint:endPoint)[!(startPoint:endPoint) %in% tmpLoc],get(CoordRef)], obj1 = (startPoint:endPoint)[!(startPoint:endPoint) %in% tmpLoc])
-    CoordTable[tmpLoc, eval(CoordRef) := predict(object = modelSpline, x = extractIDX)$y,]
-    if(i!=length(MissLoc)) {
-      startPoint <- MissLoc[i+1]-jumpLength
-      endPoint <- MissLoc[i+1]+jumpLength
-    }
+    par <- suppressWarnings(nlminb(x = diff(CoordTable[,get(CoordRef)]),
+                                   fitDT,
+                                   start = c(1,0))$par)
+    MissLoc <- (1:CoordTable[,.N])[dt(x = diff(CoordTable[,get(CoordRef)])-par[2], df = par[1], log = T) < -10]+1
+    iteration <- iteration+1
+    cutWindow <- cutWindow+1
+  }
+  message(paste("Correction applied for",CoordRef, "\nCutting window:",iteration-1))
+  if(iteration == 10) {
+    warning(paste("Iterationn exceeded limit for", CoordRef))
   }
 }

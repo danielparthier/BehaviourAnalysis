@@ -13,8 +13,7 @@ DeepLabCutLoad(
   xScale = 1,
   yScale = 1,
   JumpCorrections = T,
-  interpWindow = 21,
-  cutWindow = 2
+  interpWindow = 21
 )
 }
 \arguments{
