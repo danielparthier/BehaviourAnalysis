@@ -11,7 +11,10 @@ DeepLabCutLoad(
   ObjectLabels,
   ObjectNumber,
   xScale = 1,
-  yScale = 1
+  yScale = 1,
+  JumpCorrections = T,
+  interpWindow = 21,
+  cutWindow = 2
 )
 }
 \arguments{
@@ -28,6 +31,12 @@ DeepLabCutLoad(
 \item{xScale}{A double representing the scaling factor.}
 
 \item{yScale}{A double representing the scaling factor.}
+
+\item{JumpCorrections}{A bool indicating correction of label jump artefacts.}
+
+\item{interpWindow}{An integer determining the length of spline fitting area around artefact.}
+
+\item{cutWindow}{An integer determining the length of cut-out around artefact.}
 }
 \value{
 Generate DataTable from CSV file

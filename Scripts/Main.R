@@ -23,7 +23,8 @@ MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  ObjectLabels = ObjectList,
                                  ObjectNumber = ObjectNumber,
                                  xScale = 1,
-                                 yScale = 1)
+                                 yScale = 1,
+                                 JumpCorrections = T)
 
 # compute body motion properties
 DistSpeedCalc(CoordTable = MouseDataTable$DataTable,
@@ -76,10 +77,10 @@ SpeedPlot <- SpeedPlot(DataTable = MouseDataTable$DataTable,
                        ObjectTable = MouseDataTable$ObjectTable)
 
 DensityPlot <- LocationPlot(DataTable = MouseDataTable$DataTable,
-                         x = "headCentroid_x",
-                         y = "headCentroid_y",
-                         ObjectTable = MouseDataTable$ObjectTable,
-                         Density = T)
+                            x = "headCentroid_x",
+                            y = "headCentroid_y",
+                            ObjectTable = MouseDataTable$ObjectTable,
+                            Density = T)
 
 
 if(ObjectNumber>0) {
@@ -117,7 +118,7 @@ RearingPlot <- LengthPlot(DataTable = MouseDataTable$DataTable,
 # Arrange Plots
 if(ObjectNumber>0) {
   MovementPlot <- (SpeedPlot | ObjectAnglePlots[[1]] | ObjectAnglePlots[[2]]) / ObjectDistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24))
-  ggsave(plot = MovementPlot, filename = "Plots/MovementPlotLight.pdf", device = "pdf", width = 10.4, height = 6)
+  ggsave(plot = MovementPlot, filename = "Plots/MovementPlotLight.jpeg", device = "jpeg", width = 10.4, height = 6)
 }
 
 OutPutPlotRearing <- RearingPlotLine + RearingPlot
