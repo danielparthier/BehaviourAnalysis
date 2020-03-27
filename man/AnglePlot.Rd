@@ -25,7 +25,7 @@ AnglePlot(
 
 \item{colourScheme}{A string indicating the colour scheme (default = "dark").}
 
-\item{ObjectHighlight}{A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none").}
+\item{ObjectHighlight}{A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none" or colour valid string).}
 }
 \value{
 Returns a ggplot.

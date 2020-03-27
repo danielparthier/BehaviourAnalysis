@@ -212,7 +212,7 @@ DistancePlot <- function(DataTable,
 #' @param y A string referencing the y-ccordinate column.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param colourScheme A string indicating the colour scheme (default = "dark").
-#' @param ObjectHighlight A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none").
+#' @param ObjectHighlight A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none" or colour valid string).
 #'
 #' @return Returns a ggplot.
 #' @export
@@ -245,7 +245,11 @@ AnglePlot <- function(DataTable,
     if(is.data.table(ObjectTable)) {
       labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
       targetObject <- sapply(ObjectTable[,ObjectLoc], function(x) { grepl(pattern = x, x = Angle)})
-      if(!sum(grepl(pattern = ObjectHighlight, x = c("alpha", "colour", "stroke", "none")))==1) {
+      if(any(grepl(ObjectHighlight, colors()))) {
+        chosenColour <- ObjectHighlight
+        ObjectHighlight <- "colourChoice"
+      }
+      if(!sum(grepl(pattern = ObjectHighlight, x = c("alpha", "colour", "stroke", "colourChoice", "none")))==1) {
         ObjectHighlight <- "alpha"
         message("No valid argument for 'ObjectHighlight'. Switch to default 'alpha'.")
       }
@@ -262,7 +266,7 @@ AnglePlot <- function(DataTable,
           geom_point(data = ObjectTable, aes(x = x, y = y),
                      shape = 21,
                      colour = ifelse(targetObject, "red", "black"),
-                     alpha = 0.5,
+                     alpha = 0.7,
                      size = 8,
                      stroke = 2)+
           annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
@@ -279,6 +283,14 @@ AnglePlot <- function(DataTable,
                      shape = 21,
                      colour = "black",
                      alpha = 0.5,
+                     size = 8,
+                     stroke = 2)+
+          annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
+        "colourChoice" = {OutputPlot <- OutputPlot+
+          geom_point(data = ObjectTable, aes(x = x, y = y),
+                     shape = 21,
+                     colour = ifelse(targetObject, chosenColour, "black"),
+                     alpha = 0.7,
                      size = 8,
                      stroke = 2)+
           annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)}
