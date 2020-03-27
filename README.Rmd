@@ -4,13 +4,11 @@ output: github_document
 ---
 
 ```{r setup, include=TRUE, , warning=F}
-knitr::opts_chunk$set(echo = F)
-library(BehaviouR)
-#library(data.table)
-library(ggplot2)
-library(patchwork)
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
 knitr::opts_chunk$set(echo=T,   fig.path = "README_figs/README-")
+library(BehaviouR)
+library(ggplot2)
+library(patchwork)
 ```
 
 

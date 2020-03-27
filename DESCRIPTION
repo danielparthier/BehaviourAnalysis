@@ -11,7 +11,8 @@ Description: More details about what the package does. See
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.3),
     data.table (>= 1.12.8),
-    ggplot2
+    ggplot2,
+    splines
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.0.2
 Encoding: UTF-8
