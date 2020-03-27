@@ -69,6 +69,17 @@ AddCentroid(CoordTable = MouseDataTable$DataTable,
             CornerNames = list("ear"),
             ReferenceColumn = "frame",
             OutputName = "BetweenEars")
+for(i in MouseDataTable$ObjectTable$ObjectLoc) {
+  ObjectString <- grep(pattern = paste0("^", i, "[_][alphanum]",".*","[_]Angle", "$"),
+       x = colnames(MouseDataTable$DataTable),
+       value = T)
+  AngleDiff(CoordTable = MouseDataTable$DataTable,
+            Angle1 = "HeadAngle",
+            Angle2 = ObjectString,
+            OutputName = paste0(i,"_HeadAngle_Angle"))
+
+}
+
 
 # Plot functions
 SpeedPlot <- SpeedPlot(DataTable = MouseDataTable$DataTable,
@@ -87,7 +98,7 @@ DensityPlot <- LocationPlot(DataTable = MouseDataTable$DataTable,
 if(ObjectNumber>0) {
   ObjectAnglePlots <- lapply(X = 1:ObjectNumber, FUN = function(objID) {
     AnglePlot(DataTable = MouseDataTable$DataTable,
-              Angle = paste0("object_",objID,"_headCentroid_Angle"),
+              Angle = paste0("object_",objID,"_HeadAngle_Angle"),
               x = "headCentroid_x",
               y = "headCentroid_y",
               ObjectTable = MouseDataTable$ObjectTable,

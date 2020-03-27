@@ -19,8 +19,8 @@ AngleCalc <- function(CoordTable,
     stop("reference not found for VectorEnd")
   }
   OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
-  CoordTable[,eval(OutputName):=atan2(x = (get(paste0(VectorStart, "_x"))-get(paste0(VectorEnd, "_x"))),
-                                      y = (get(paste0(VectorStart, "_y"))-get(paste0(VectorEnd, "_y")))),]
+  CoordTable[,eval(OutputName):=atan2(x = (get(paste0(VectorEnd, "_x"))-get(paste0(VectorStart, "_x"))),
+                                      y = (get(paste0(VectorEnd, "_y"))-get(paste0(VectorStart, "_y")))),]
 }
 
 #' Calculate difference between two angles (radians)
@@ -38,9 +38,9 @@ AngleDiff <- function(CoordTable,
                       Angle1,
                       Angle2,
                       OutputName) {
-  if(sum(data.table::like(vector = names(CoordTable),pattern = Angle1)) != 1) {
+  if(sum(data.table::like(vector = names(CoordTable),pattern = Angle1)) == 0) {
     stop("Angle1 not found")
-  } else if(sum(data.table::like(vector = names(CoordTable), pattern = Angle2)) != 1) {
+  } else if(sum(data.table::like(vector = names(CoordTable), pattern = Angle2)) == 0) {
     stop("Angle2 not found")
   }
   OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)

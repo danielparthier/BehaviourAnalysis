@@ -4,7 +4,7 @@ Title: Analysis of DeepLabCut output in R
 Version: 0.1
 Date: 2020-03-05
 Author@R: person("Daniel", "Parthier", role = c("aut", "cre"))
-Maintainer: Daniel Parthier
+Maintainer: Daniel Parthier <your@email.com>
 BugReports: https://github.com/danielparthier/BehaviourAnalysis/issues
 Description: This package reads data generated with DeepLabCut (Mathis et al. 2018 <doi:10.1038/s41593-018-0209-y>) 
     and allows analysis and visualisation of behavioural data. Labels can be easily structed and properties of objects 
