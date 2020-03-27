@@ -212,6 +212,7 @@ DistancePlot <- function(DataTable,
 #' @param y A string referencing the y-ccordinate column.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param colourScheme A string indicating the colour scheme (default = "dark").
+#' @param ObjectHighlight A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none").
 #'
 #' @return Returns a ggplot.
 #' @export
@@ -220,7 +221,8 @@ AnglePlot <- function(DataTable,
                       x = NULL,
                       y = NULL,
                       ObjectTable = NULL,
-                      colourScheme = "dark") {
+                      colourScheme = "dark",
+                      ObjectHighlight = "alpha") {
   if(is.null(x) & is.null(y) & is.character(Angle)) {
     tmpFrame <- data.frame(AngleVec = DataTable[[Angle]]*180/pi, Time = DataTable[,Time])
     OutputPlot <- ggplot(data = tmpFrame, aes(x = Time, y = AngleVec))+
@@ -242,10 +244,46 @@ AnglePlot <- function(DataTable,
       theme(legend.title.align=0.5)
     if(is.data.table(ObjectTable)) {
       labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
-      OutputPlot <- OutputPlot+
-        geom_point(data = ObjectTable, aes(x = x, y = y), shape = 21, colour = "black", alpha = 0.5, size = 8, stroke = 2)+
-        annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)
-    }
+      targetObject <- sapply(ObjectTable[,ObjectLoc], function(x) { grepl(pattern = x, x = Angle)})
+      if(!sum(grepl(pattern = ObjectHighlight, x = c("alpha", "colour", "stroke", "none")))==1) {
+        ObjectHighlight <- "alpha"
+        message("No valid argument for 'ObjectHighlight'. Switch to default 'alpha'.")
+      }
+      switch (ObjectHighlight,
+        "alpha" = {OutputPlot <- OutputPlot+
+          geom_point(data = ObjectTable, aes(x = x, y = y),
+                     shape = 21,
+                     colour = "black",
+                     alpha = ifelse(targetObject, 0.9, 0.5),
+                     size = 8,
+                     stroke = 2)+
+          annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
+        "colour" = {OutputPlot <- OutputPlot+
+          geom_point(data = ObjectTable, aes(x = x, y = y),
+                     shape = 21,
+                     colour = ifelse(targetObject, "red", "black"),
+                     alpha = 0.5,
+                     size = 8,
+                     stroke = 2)+
+          annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
+        "stroke" = {OutputPlot <- OutputPlot+
+          geom_point(data = ObjectTable, aes(x = x, y = y),
+                     shape = 21,
+                     colour = "black",
+                     alpha = 0.5,
+                     size = 8,
+                     stroke = ifelse(targetObject, 3, 2))+
+          annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
+        "none" = {OutputPlot <- OutputPlot+
+          geom_point(data = ObjectTable, aes(x = x, y = y),
+                     shape = 21,
+                     colour = "black",
+                     alpha = 0.5,
+                     size = 8,
+                     stroke = 2)+
+          annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)}
+      )
+      }
     return(OutputPlot)
   } else {
     warning("Missing arguments")

@@ -10,7 +10,8 @@ AnglePlot(
   x = NULL,
   y = NULL,
   ObjectTable = NULL,
-  colourScheme = "dark"
+  colourScheme = "dark",
+  ObjectHighlight = "alpha"
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ AnglePlot(
 \item{ObjectTable}{Optional data.table with Objects.}
 
 \item{colourScheme}{A string indicating the colour scheme (default = "dark").}
+
+\item{ObjectHighlight}{A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none").}
 }
 \value{
 Returns a ggplot.
