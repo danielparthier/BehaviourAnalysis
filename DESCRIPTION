@@ -1,13 +1,14 @@
 Package: BehaviouR
 Type: Package
-Title: What the Package Does Using Title Case
-Version: 1.0
+Title: Analysis of DeepLabCut output in R
+Version: 0.1
 Date: 2020-03-05
-Author: Your Name
-Maintainer: Your Name <your@email.com>
-Description: More details about what the package does. See
-            <http://cran.r-project.org/doc/manuals/r-release/R-exts.html#The-DESCRIPTION-file> for details on
-            how to write this part.
+Author@R: person("Daniel", "Parthier", role = c("aut", "cre"))
+Maintainer: Daniel Parthier
+BugReports: https://github.com/danielparthier/BehaviourAnalysis/issues
+Description: This package reads data generated with DeepLabCut (Mathis et al. 2018 <doi:10.1038/s41593-018-0209-y>) 
+    and allows analysis and visualisation of behavioural data. Labels can be easily structed and properties of objects 
+    calculated over time.
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.3),
     data.table (>= 1.12.8),
