@@ -11,6 +11,7 @@
 #' @param JumpCorrections A bool indicating correction of label jump artefacts.
 #' @param interpWindow An integer determining the length of spline fitting area around artefact.
 #' @param cutWindow An integer determining the length of cut-out around artefact.
+#' @param includeAll A bool indicating if other labels should be imported as well (default = TRUE).
 #' @import data.table
 #' 
 #' @return Generate DataTable from CSV file
@@ -23,12 +24,14 @@ DeepLabCutLoad <- function(FileName,
                            xScale = 1,
                            yScale = 1,
                            JumpCorrections = T,
-                           interpWindow = 21) {
+                           interpWindow = 21,
+                           includeAll = T) {
   DataSet <- data.table::fread(file = FileName, skip = 2)
   LabelNames <- data.table::fread(file = FileName, nrows = 1)
-  
   # Construct unique columns
   ColumnNames <- paste(LabelNames, colnames(DataSet), sep="_")
+  message(paste("all labels:", paste0(unlist(strsplit(x = grep(pattern = "_likelihood", x = ColumnNames, value = T),
+                                                      split = "_likelihood")), collapse = "\n")))
   colnames(DataSet) <- ColumnNames
   # Correct for inverse y coordinates
   DataSet[, (grep("_y", colnames(DataSet))) := 
@@ -92,10 +95,42 @@ DeepLabCutLoad <- function(FileName,
     # Generate object coordinate table
     ObjectCoord <- ObjectSet[,.(x=median(x),y=median(y)), by=ObjectLoc]
   }
+  if(includeAll) {
+    RestColumns <- DataSet[,.SD,
+                          .SDcols = !data.table::like(vector = names(DataSet),
+                                                      pattern = "likelihood",
+                                                      ignore.case = T)
+                          & !data.table::like(vector = names(DataSet),
+                                             pattern = paste0(c(unique(unlist(MouseLabels))), collapse = "|"),
+                                             ignore.case = T)
+                          & !data.table::like(vector = names(DataSet),
+                                             pattern = paste0(unique(unlist(ObjectLabels)), collapse = "|"),
+                                             ignore.case = T)
+                          | data.table::like(vector = names(DataSet),
+                                              pattern = ColumnNames[1],
+                                              ignore.case = T)]
+    
+    if(JumpCorrections) {
+      CoordinateCols <- c(grep("_x", colnames(RestColumns)), grep("_y", colnames(RestColumns)))
+      for(i in CoordinateCols) {
+        TargetCol <- colnames(RestColumns)[i]
+        CoordInterp(CoordTable = RestColumns,
+                    CoordRef = TargetCol,
+                    interpWindow = interpWindow) 
+      }
+    }
+    # Rename to frame and calculate time
+    data.table::setnames(x = RestColumns, old = ColumnNames[1], new = "frame")
+    RestColumns[,"Time":=frame/FrameRate,]
+  }
+  
   OutputTable <- list()
   OutputTable$DataTable <- CoordTable
   if(ObjectNumber > 0) {
     OutputTable$ObjectTable <- ObjectCoord
+  }
+  if(includeAll) {
+    OutputTable$AllTable <- RestColumns
   }
   return(OutputTable)
 }
@@ -123,7 +158,7 @@ CoordInterp <- function(CoordTable, CoordRef, interpWindow = 21) {
       if (i<(length(MissLoc)) & (MissLoc[i+1]-MissLoc[i])<(interpWindow-1)/2) {
         next
       }
-      endPoint <- MissLoc[i]+jumpLength
+      endPoint <- ifelse(test = (MissLoc[i]+jumpLength)>CoordTable[,.N,], yes = CoordTable[,.N,], no = (MissLoc[i]+jumpLength))
       extractIDX <- MissLoc[data.table::between(x = MissLoc, lower = startPoint, upper = endPoint)]
       tmpLoc <- MissLoc[data.table::between(x = MissLoc, lower = startPoint, upper = endPoint)]
       modelSpline <- splines::interpSpline(obj2 = CoordTable[(startPoint:endPoint)[!(startPoint:endPoint) %in% tmpLoc],get(CoordRef)],
