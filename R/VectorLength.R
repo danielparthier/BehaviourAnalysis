@@ -5,13 +5,18 @@
 #' @param VectorStart A string indicating the label used for start of vector.
 #' @param VectorEnd A string indicating the label used for end of vector.
 #' @param OutputName A string indicating the label used as output.
+#' @param Overwrite A bool indicating if ouput should be overwritten if it exists already (default = TRUE).
 #'
 #' @return Modifys existing DataTable.
 #' @export
 VectorLength <- function(CoordTable,
                          VectorStart,
                          VectorEnd,
-                         OutputName){
+                         OutputName,
+                         Overwrite = TRUE) {
+  if(Overwrite) {
+    OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
+  }
   # Vector length for two different columns
   CoordTable[, eval(OutputName):= sqrt((get(paste0(VectorStart, "_x")) - get(paste0(VectorEnd, "_x")))^2 +
                                          (get(paste0(VectorStart, "_y")) - get(paste0(VectorEnd, "_y")))^2)]

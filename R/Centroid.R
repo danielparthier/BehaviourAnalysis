@@ -5,15 +5,18 @@
 #' @param CornerNames A vector string with labels .
 #' @param ReferenceColumn A string indicating the reference column.
 #' @param OutputName A string for output.
+#' @param Overwrite A bool indicating if ouput should be overwritten if it exists already (default = TRUE).
 #' 
 #' @return Add centroid coordinates
 #' @export
 AddCentroid <- function(CoordTable,
                         CornerNames,
                         ReferenceColumn,
-                        OutputName) {
-  OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
-  
+                        OutputName,
+                        Overwrite = TRUE) {
+  if(!Overwrite) {
+    OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
+  }
   if(length(CornerNames)>1) {
     ColumnSearch <- paste0(unique(unlist(CornerNames)), collapse = "|")
   } else if(length(CornerNames)==1) {
@@ -53,16 +56,23 @@ AddCentroid <- function(CoordTable,
 #' This function calculates the centroid of object with .
 #' @param CoordTable DataTable with coordinates.
 #' @param MouseLabels A vector string with labels.
+#' @param Overwrite A bool indicating if ouput should be overwritten if it exists already (default = TRUE).
 #' 
 #' @return Add centroid coordinates
 #' @export
 CentroidCollect <- function(CoordTable,
-                            MouseLabels){
+                            MouseLabels,
+                            Overwrite = TRUE){
   for(i in 1:length(MouseLabels)) {
+    if(!Overwrite) {
+      OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = paste0(names(MouseBodyList)[i], "Centroid"))
+    } else {
+      OutputName <- paste0(names(MouseBodyList)[i], "Centroid")
+    }
     AddCentroid(CornerNames = MouseBodyList[[i]],
                 CoordTable = CoordTable,
                 ReferenceColumn = "frame",
-                OutputName = paste0(names(MouseBodyList)[i], "Centroid"))
+                OutputName = OutputName)
   }
 }
 
