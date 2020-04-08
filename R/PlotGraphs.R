@@ -61,7 +61,7 @@ SpeedPlot <- function(DataTable,
       ylab(label = paste0("Speed (", Unit, ")"))+
       xlab(label = "Time (s)")+
       theme_classic()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     return(OutputPlot)
   } else if(is.character(x) & is.character(y) & is.character(Speed)) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y, colour = Speed))+
@@ -108,7 +108,7 @@ LocationPlot <- function(DataTable,
       scale_fill_viridis_c()+
       labs(fill = "Density")+
       theme_void()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
       labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
         OutputPlot <- OutputPlot+
@@ -120,7 +120,7 @@ LocationPlot <- function(DataTable,
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y))+
       geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1, colour = "black")+
       theme_void()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
       labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
         OutputPlot <- OutputPlot+
@@ -163,7 +163,7 @@ DistancePlot <- function(DataTable,
       ylab(label = paste0("Distance (", Unit, ")"))+
       xlab(label = "Time (s)")+
       theme_classic()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     return(OutputPlot)
   } else if(is.character(x) & is.character(y) & is.character(Distance) & !ObjectDistance) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y, colour = Distance))+
@@ -171,7 +171,7 @@ DistancePlot <- function(DataTable,
       scale_color_viridis_C()+
       labs(colour = paste0("Distance\n(", Unit, ")"))+
       theme_void()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
       labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
       OutputPlot <- OutputPlot+
@@ -195,7 +195,7 @@ DistancePlot <- function(DataTable,
       ylab(label = paste0("Distance (", Unit, ")"))+
       xlab(label = "Time (s)")+
       theme_classic()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     return(OutputPlot)
   } else {
     warning("Missing arguments")
@@ -232,7 +232,7 @@ AnglePlot <- function(DataTable,
       ylab(label = "Angle (degrees)")+
       xlab(label = "Time (s)")+
       theme_classic()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     return(OutputPlot)
   } else if(is.character(x) & is.character(y) & is.character(Angle)) {
     tmpFrame <- data.frame(AngleVec = DataTable[[Angle]]*180/pi, x = DataTable[[x]], y = DataTable[[y]])
@@ -241,7 +241,7 @@ AnglePlot <- function(DataTable,
       labs(colour = "Angle\n(degrees)")+
       scale_color_gradientn(colours = CustomColourPalette(Mode = colourScheme, n = 5), limits = c(-180,180), breaks = c(-180, -90, 0, 90, 180))+
       theme_void()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
       labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
       targetObject <- sapply(ObjectTable[,ObjectLoc], function(x) { grepl(pattern = x, x = Angle)})
@@ -332,7 +332,7 @@ LengthPlot <- function(DataTable,
       ylab(label = paste0("Length (", Unit, ")"))+
       xlab(label = "Time (s)")+
       theme_classic()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     return(OutputPlot)
   } else if(is.character(x) & is.character(y) & is.character(Length)) {
     OutputPlot <- ggplot(data = DataTable, aes_string(x = x, y = y, colour = Length))+
@@ -340,7 +340,7 @@ LengthPlot <- function(DataTable,
       scale_color_viridis_c(direction = ifelse(test = ColourFlip, yes = -1, no = 1))+
       labs(colour = paste0("Length\n(", Unit, ")"))+
       theme_void()+
-      theme(legend.title.align=0.5)
+      theme(legend.title.align=0.5, plot.margin = margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
       labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
       OutputPlot <- OutputPlot+
