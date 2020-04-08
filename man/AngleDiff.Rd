@@ -4,7 +4,7 @@
 \alias{AngleDiff}
 \title{Calculate difference between two angles (radians)}
 \usage{
-AngleDiff(CoordTable, Angle1, Angle2, OutputName)
+AngleDiff(CoordTable, Angle1, Angle2, OutputName, Overwrite = TRUE)
 }
 \arguments{
 \item{CoordTable}{A table including coordinates of labels.}
@@ -14,6 +14,8 @@ AngleDiff(CoordTable, Angle1, Angle2, OutputName)
 \item{Angle2}{A double indicating the angle in radians.}
 
 \item{OutputName}{A string indicating for the output angle difference.}
+
+\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Modifies existing DataTable.

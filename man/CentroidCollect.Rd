@@ -4,12 +4,14 @@
 \alias{CentroidCollect}
 \title{Wrapper for centroid calculation}
 \usage{
-CentroidCollect(CoordTable, MouseLabels)
+CentroidCollect(CoordTable, MouseLabels, Overwrite = TRUE)
 }
 \arguments{
 \item{CoordTable}{DataTable with coordinates.}
 
 \item{MouseLabels}{A vector string with labels.}
+
+\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Add centroid coordinates

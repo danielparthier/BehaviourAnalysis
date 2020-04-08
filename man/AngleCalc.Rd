@@ -4,7 +4,7 @@
 \alias{AngleCalc}
 \title{Calculate angle between two vectors}
 \usage{
-AngleCalc(CoordTable, VectorStart, VectorEnd, OutputName)
+AngleCalc(CoordTable, VectorStart, VectorEnd, OutputName, Overwrite = TRUE)
 }
 \arguments{
 \item{CoordTable}{A table including coordinates of labels.}
@@ -14,6 +14,8 @@ AngleCalc(CoordTable, VectorStart, VectorEnd, OutputName)
 \item{VectorEnd}{A vector string indicating the labels used for computing object angle.}
 
 \item{OutputName}{A string indicating the label used for object angle.}
+
+\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Modifies existing DataTable.

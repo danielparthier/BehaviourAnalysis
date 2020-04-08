@@ -4,7 +4,7 @@
 \alias{VectorLength}
 \title{Vector Length}
 \usage{
-VectorLength(CoordTable, VectorStart, VectorEnd, OutputName)
+VectorLength(CoordTable, VectorStart, VectorEnd, OutputName, Overwrite = TRUE)
 }
 \arguments{
 \item{CoordTable}{A table including coordinates of labels.}
@@ -14,6 +14,8 @@ VectorLength(CoordTable, VectorStart, VectorEnd, OutputName)
 \item{VectorEnd}{A string indicating the label used for end of vector.}
 
 \item{OutputName}{A string indicating the label used as output.}
+
+\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Modifys existing DataTable.

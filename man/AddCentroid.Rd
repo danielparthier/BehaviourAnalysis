@@ -4,7 +4,13 @@
 \alias{AddCentroid}
 \title{Calculate centroid}
 \usage{
-AddCentroid(CoordTable, CornerNames, ReferenceColumn, OutputName)
+AddCentroid(
+  CoordTable,
+  CornerNames,
+  ReferenceColumn,
+  OutputName,
+  Overwrite = TRUE
+)
 }
 \arguments{
 \item{CoordTable}{DataTable with coordinates.}
@@ -14,6 +20,8 @@ AddCentroid(CoordTable, CornerNames, ReferenceColumn, OutputName)
 \item{ReferenceColumn}{A string indicating the reference column.}
 
 \item{OutputName}{A string for output.}
+
+\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Add centroid coordinates

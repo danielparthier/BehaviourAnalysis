@@ -13,7 +13,8 @@ DeepLabCutLoad(
   xScale = 1,
   yScale = 1,
   JumpCorrections = T,
-  interpWindow = 21
+  interpWindow = 21,
+  includeAll = T
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ DeepLabCutLoad(
 \item{JumpCorrections}{A bool indicating correction of label jump artefacts.}
 
 \item{interpWindow}{An integer determining the length of spline fitting area around artefact.}
+
+\item{includeAll}{A bool indicating if other labels should be imported as well (default = TRUE).}
 
 \item{cutWindow}{An integer determining the length of cut-out around artefact.}
 }
