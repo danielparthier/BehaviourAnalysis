@@ -3,12 +3,9 @@ title: "README"
 output: github_document
 ---
 
-```{r setup, include=TRUE, , warning=F}
+```{r setup, include=TRUE, , warning=F, echo=F}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
 knitr::opts_chunk$set(echo=T,   fig.path = "README_figs/README-")
-library(BehaviouR)
-library(ggplot2)
-library(patchwork)
 ```
 
 
@@ -26,10 +23,14 @@ ObjectNumber <- 2
 
 ## Load Data
 
-The data can be loaded using the `BehaviouR` package with its function `DeepLabCutLoad()`. The function requires some information about the labels one is interested in, namely body parts and objects. In this case we define two groups of the mouse (head and body). These two groups are then subdivided into different parts/labels which are forming the structure. The labels have to refer to column names which appear in the DeepLabCout output. In the following example *ear*, *nose* and *ear*, *tail*. When the term *"ear"* is used the function will search for any label which contains the term. Therefore, *leftear* and *rightear* are both included. However, this requires explicit labels in cases where only one of the two is required. The scaling arguments can be used to adjust for the unit size per pixel.
+The data can be loaded using the `BehaviouR` package with its function `DeepLabCutLoad()`. The function requires some information about the labels one is interested in, namely body parts and objects. In this case we define two groups of the mouse (head and body). These two groups are then subdivided into different parts/labels which are forming the structure. The labels have to refer to column names which appear in the DeepLabCout output. In the following example *ear*, *nose* and *ear*, *tail*. When the term *"ear"* is used the function will search for any label which contains the term. Therefore, *leftear* and *rightear* are both included. However, this requires explicit labels in cases where only one of the two is required. The scaling arguments can be used to adjust for the unit size per pixel. The tracked labels will be checked for irregularities based on the distribution of the differences over time. If the coordinates are detected as outliers they will be removed and interpolated by B-splines.
 
 ```{r ListGeneration, warning=F}
 library(BehaviouR)
+library(ggplot2)
+library(patchwork)
+library(data.table)
+
 MouseBodyList <- list()
 MouseBodyList$head <- c("ear", "nose")
 MouseBodyList$body <- c("ear", "tail")
@@ -40,8 +41,10 @@ MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  MouseLabels = MouseBodyList,
                                  ObjectLabels = ObjectList,
                                  ObjectNumber = ObjectNumber,
-                                 xScale = 1,
-                                 yScale = 1)
+                                 xScale = 0.91,
+                                 yScale = 0.91,
+                                 JumpCorrections = T,
+                                 includeAll = F)
 summary(MouseDataTable)
 
 ```
@@ -98,6 +101,27 @@ AddCentroid(CoordTable = MouseDataTable$DataTable,
             OutputName = "BetweenEars")
 ```
 
+We can also calculate the angle difference for every object, meaning the of the head in relation to the object, and the entries for the zone around the object which we will specify based on two criteria. Firstly, the distance to the centre of the object which we will define by the 95 percentile of the animal length. Secondly, the viewing angle to the object. The idea behind the angle is to validate active approaching which requires to look into the direction of the object opposed to passing by randomly. The cut-off for the angle can be adjusted and is set here to a ±10th pi, which is a 5th of a circle.
+
+```{r ObjectZones, warning=F}
+for(i in MouseDataTable$ObjectTable$ObjectLoc) {
+  ObjectString <- grep(pattern = paste0("^", i, "[_][alphanum]",".*","[_]Angle", "$"),
+       x = colnames(MouseDataTable$DataTable),
+       value = T)
+  AngleDiff(CoordTable = MouseDataTable$DataTable,
+            Angle2 = "HeadAngle",
+            Angle1 = ObjectString,
+            OutputName = paste0(i,"_HeadAngle_Angle"))
+  ZoneEntry(CoordTable = MouseDataTable$DataTable,
+            DistanceRef = paste0(i,"_headCentroid_Distance"),
+            Length = quantile(MouseDataTable$DataTable$BodyLength, 0.95),
+            AngleInclusion = T,
+            AngleRef = paste0(i,"_HeadAngle_Angle"),
+            AngleRange = pi/10, 
+            Overwrite = T)
+}
+```
+
 ## Plotting Data
 The data can be plotted using functions and strings as references. For some functions 2D and 1D options are available, meaning if `x` and `y` are valid references a 2D-plot is generated showing the trajectory and the target parameter in colour code. The `LocationPlot()` further has the option to output the density/probability of occupancy. The other possible functions are `SpeedPlot()`, `AnglePlot()`, `DistancePlot()`, and `LengthPlot()` with their 1D and 2D functionality. Currently, the plots are implemented with colour blind friendly colour schemes.
 
@@ -107,37 +131,42 @@ SpeedPlot <- SpeedPlot(DataTable = MouseDataTable$DataTable,
                        Speed = "SpeedbodyCentroid",
                        x = "headCentroid_x",
                        y = "headCentroid_y",
-                       ObjectTable = MouseDataTable$ObjectTable)
+                       ObjectTable = MouseDataTable$ObjectTable,
+                       Unit = "cm/s")
 
 DensityPlot <- LocationPlot(DataTable = MouseDataTable$DataTable,
-                         x = "headCentroid_x",
-                         y = "headCentroid_y",
-                         ObjectTable = MouseDataTable$ObjectTable,
-                         Density = T)
+                            x = "headCentroid_x",
+                            y = "headCentroid_y",
+                            ObjectTable = MouseDataTable$ObjectTable,
+                            Density = T)
 
 
 if(ObjectNumber>0) {
   ObjectAnglePlots <- lapply(X = 1:ObjectNumber, FUN = function(objID) {
     AnglePlot(DataTable = MouseDataTable$DataTable,
-              Angle = paste0("object_",objID,"_headCentroid_Angle"),
+              Angle = paste0("object_",objID,"_HeadAngle_Angle"),
               x = "headCentroid_x",
               y = "headCentroid_y",
               ObjectTable = MouseDataTable$ObjectTable,
-              colourScheme = "dark")
+              colourScheme = "light",
+              ObjectHighlight = "alpha")
   })   
 }
 
 
 SpeedPlotLine <- SpeedPlot(DataTable = MouseDataTable$DataTable,
-                           Speed = "SpeedbodyCentroid")
+                           Speed = "SpeedbodyCentroid",
+                           Unit = "cm/s")
 
 DistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
-                                 Distance = "CumDistbodyCentroid")
+                                 Distance = "CumDistbodyCentroid",
+                                 Unit = "cm")
 
 ObjectDistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
                                        Distance = "headCentroid_Distance",
                                        ObjectTable = MouseDataTable$ObjectTable,
-                                       ObjectDistance = T)
+                                       ObjectDistance = T,
+                                       Unit = "cm")
 
 RearingPlotLine <- LengthPlot(DataTable = MouseDataTable$DataTable,
                               Length = "BodyLength")
@@ -146,7 +175,9 @@ RearingPlot <- LengthPlot(DataTable = MouseDataTable$DataTable,
                           Length = "BodyLength",
                           x = "headCentroid_x",
                           y = "headCentroid_y",
-                          ObjectTable = MouseDataTable$ObjectTable)
+                          ObjectTable = MouseDataTable$ObjectTable) +
+  scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE, reverse = T), direction = -1)
+
 ```
 
 
@@ -155,35 +186,42 @@ The plots can be arranged and panels generated by using the `patchwork` library.
 ```{r PlottingFunctions2, warning=F}
 # Arrange Plots
 if(ObjectNumber>0) {
-  MovementPlot <- (SpeedPlot | ObjectAnglePlots[[1]] | ObjectAnglePlots[[2]]) / ObjectDistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24))
-  ggsave(plot = MovementPlot, filename = "Plots/MovementPlot.pdf", device = "pdf", width = 10.4, height = 6)
+  MovementPlot <- (SpeedPlot | ObjectAnglePlots[[1]] | ObjectAnglePlots[[2]]) / ObjectDistancePlotLine &
+    plot_annotation(title = "Movement and Object Parameters", subtitle = "Different parameters measured during exploration.",tag_levels = "A") &
+    theme(plot.title = element_text(size=20),plot.tag = element_text(size=24))
 }
 
-OutPutPlotRearing <- RearingPlotLine + RearingPlot + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
-OutPutPlotMap <- SpeedPlot + DensityPlot + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
-OutPutPlotMovement <- SpeedPlotLine + DistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
-
-ggsave(plot = OutPutPlotMap, filename = "Plots/OutPutPlotMap.pdf", device = "pdf", width = 10.4, height = 4)
-ggsave(plot = OutPutPlotMovement, filename = "Plots/OutPutPlotMovement.pdf", device = "pdf", width = 10.4, height = 4)
-ggsave(plot = ObjectDistancePlotLine, filename = "Plots/ObjectDistancePlotLine.pdf", device = "pdf", width = 5, height = 3)
-ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlot.pdf", device = "pdf", width = 5, height = 3)
-
+OutPutPlotRearing <- RearingPlotLine + RearingPlot &
+  plot_annotation(tag_levels = "A") & 
+  plot_annotation(title = "Rearing", subtitle = "Rearing during exploration is mainly seen close to walls or objects.",tag_levels = "A") &
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24))
+OutPutPlotMap <- (SpeedPlot + DensityPlot) + plot_annotation(tag_levels = "A") &
+  plot_annotation(title = "Exploration", subtitle = "Speed and location during exploration of arena.",tag_levels = "A") &
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24))
+OutPutPlotMovement <- SpeedPlotLine + DistancePlotLine + plot_annotation(tag_levels = "A") &
+  plot_annotation(title = "Speed and Distance", subtitle = "Parameters are measured over time.",tag_levels = "A") &
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24)) & theme(plot.tag = element_text(size=24)) 
 ```
 
 The plot for speed (2D) and occupancy (2D):
-```{r OutPutPlotMap, echo=F, warning=F, dpi=250, fig.height=3.5, fig.width=8, out.height=350, out.width=800}
+```{r OutPutPlotMap, echo=F, warning=F, dpi=250, fig.height=4.0, fig.width=8, out.height=400, out.width=800}
 OutPutPlotMap
 ```
+
 The plot for speed (1D) and Distance (1D):
-```{r OutPutPlotMovement, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, , out.height=400, out.width=800}
+```{r OutPutPlotMovement, echo=F, warning=F, dpi=250, fig.height=4.5, fig.width=8, , out.height=450, out.width=800}
 OutPutPlotMovement
 ```
+
 The plot for stationary object distances:
-```{r ObjectDistancePlotLine, echo=F, warning=F, dpi=250, , fig.height=4, fig.width=8, out.height=400, out.width=800}
-ObjectDistancePlotLine
+```{r ObjectDistancePlotLine, echo=F, warning=F, dpi=250, , fig.height=4.5, fig.width=8, out.height=450, out.width=800}
+ObjectDistancePlotLine+
+  plot_annotation(title = "Distance to objects", subtitle = "Distance to objects at any given time.",tag_levels = "A")+
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24)) & theme(plot.tag = element_text(size=24)) 
 ```
+
 The plots for speed, object approach angle for both objects, and the distance to the objects over time:
-```{r MovementPlot, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, out.height=400, out.width=800}
+```{r MovementPlot, echo=F, warning=F, dpi=250, fig.height=4.5, fig.width=8, out.height=450, out.width=800}
 MovementPlot
 ```
 
@@ -192,15 +230,73 @@ The last plot shows the rearing measured as the length of the body. If the anima
 OutPutPlotRearing
 ```
 
-Any further adjustments or changes to the plot can be appended. For example when a different label is required one can add the `ggplot2` functions to the generated plot. In the following case we want to change the *"Length (px)"* to a more general *"Rearing"*. Further we will remove the numbers (*label*) next to the colour bar. Since it is a arbitrary measure absolute numbers might not be required.
+Any further adjustments or changes to the plot can be appended. For example when a different label is required one can add the `ggplot2` functions to the generated plot. In the following case we want to change the *"Rearing"* to a more specific *"Normalised Rearing"*. Further we will remove the numbers (*label*) next to the colour bar. Since it is a arbitrary measure absolute numbers might not be required.
 
 ```{r ChangeAxis, warning=F, dpi=250, fig.height=4, fig.width=5, out.height=400, out.width=500}
 
 RearingPlot+
-  scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE), direction = -1)
+  scale_color_viridis_c(option = "magma",guide = guide_colourbar(title = "Normalised\nRearing", label = FALSE, ticks = F), direction = -1) & 
+  plot_annotation(title = "Rearing during exploration", subtitle = "The change of posture can be reflected in the rearing.") &
+  theme(plot.title = element_text(size=20))
+```
 
-ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlotColourbar.pdf", device = "pdf", width = 5, height = 3)
+With the given `DataTable` structure we can further compute parameters derived from the interaction with the objects. One example would be to estimate the preference for an object based on the entries. To get an estimate given the data we have we can use the binomial distribution *Binom(n,p)* and the beta distribution *Beta(a, b)*
+Using this distribution we will get a Bayesian estimate of the preference parameter *X ~ Beta(a, b)*. The binomial and beta distribution are conjugate, meaning we can use a beta distribution as a prior which in our case is *Beta(1, 1)*. A flat prior which attributes all probabilities equally. When updating the function after getting new data we will update *a* and *b*. Let's assume we count 5 entries at on object and 5 at the other we would update the function such as *X* *~* *Beta(1+5, 1+5)*. Therefore we reallocate all the probabilities according to the data and get a distribution of possible outcomes. 
 
+```{r PosteriorCalc, warning=F, echo=F}
+# Calculate cumulative entries
+CumulativeEntries <- data.table::copy(MouseDataTable$DataTable[,.(CumNovel = cumsum(object_2_headCentroid_Distance_inArea_entry),
+                                                                  CumOld = cumsum(object_1_headCentroid_Distance_inArea_entry),
+                                                                  InNovel = object_2_headCentroid_Distance_inArea,
+                                                                  InOld = object_1_headCentroid_Distance_inArea,
+                                                                  Time = Time,
+                                                                  TimeDiff = 1/FrameRate)])
+# PreferenceIndex over time
+quantRibbonMin <- CumulativeEntries[,.(Time= min(Time)),by=.(CumNovel,CumOld)]
+quantRibbonMax <- CumulativeEntries[,.(Time= max(Time)),by=.(CumNovel,CumOld)]
+quantRibbon <- rbindlist(l = list(quantRibbonMin, quantRibbonMax))
+quantRibbon <- quantRibbon[,lapply(c(0.025,0.25,0.5, 0.75,0.975), function(x) {qbeta(p = x,shape1 = CumNovel+1, shape2 = CumOld+1)}),
+                           by=Time]
+
+data.table::setnames(x = quantRibbon, old = colnames(quantRibbon),
+                     new = c(colnames(quantRibbon)[1], paste0("q", c(0.025,0.25,0.5, 0.75,0.975)*1000)))
+setorder(x = quantRibbon, Time)
+
+
+
+ObjectPrefTime <- ggplot(data = quantRibbon, aes(x = Time, y = q500))+
+  geom_line()+
+  geom_ribbon(aes(ymin=q25, ymax=q975), alpha = 0.2, fill = "cornflowerblue")+
+  geom_ribbon(aes(ymin=q250, ymax=q750), alpha = 0.1, fill = "cornflowerblue")+
+  scale_y_continuous(expand = c(0,0), limits = c(0,1))+
+  scale_x_continuous(expand = c(0,0))+
+  geom_hline(yintercept = 0.5, linetype = "dashed")+
+  ylab(expression(paste("Preference Index:", ~~ frac("object"["novel"], "object"["novel"]+"object"["old"]))))+
+  theme_classic()+theme(plot.margin = margin(4, 10, 4, 4, "pt"))
+
+shapePar <- c(max(CumulativeEntries$CumNovel)+1, max(CumulativeEntries$CumOld)+1)
+ObjectPrefDensTable <- data.table(x = seq(0,1,0.001))
+ObjectPrefDensTable[,`:=`(y=dbeta(x = x, shape1 = shapePar[1], shape2 = shapePar[2]),
+                          quantile=pbeta(q = x, shape1 = shapePar[1], shape2 = shapePar[2])),]
+
+ObjectPref <- ggplot(data = ObjectPrefDensTable, aes(y = y, x = x, fill = quantile))+
+  scale_y_continuous(expand = c(0,0))+
+  scale_x_continuous(expand = c(0,0), limits = c(0,1))+
+  geom_area(mapping = aes(x = x), fill = "cornflowerblue", alpha = 0.3) +
+  geom_area(mapping = aes(x = ifelse(quantile<=0.025 , x, NaN)), fill = "cornflowerblue", alpha = 0.5) +
+  geom_area(mapping = aes(x = ifelse(quantile>=0.975 , x, NaN)), fill = "cornflowerblue", alpha = 0.5) +
+  geom_line()+
+  labs(x = expression(paste("Preference Index:", ~~ frac("object"["novel"], "object"["novel"]+"object"["old"]))), y = "Density")+
+  geom_vline(xintercept = 0.5, linetype = "dashed")+
+  theme_classic()+theme(plot.margin = margin(4, 10, 4, 4, "pt"))
+
+ObjectPrefEntryPlots <- ObjectPref + ObjectPrefTime + plot_layout(ncol=2,widths=c(1,2)) & 
+  plot_annotation(title = "Object preference", subtitle = "Estimation of object preference: 0.5 indicates equal likelihood of entries.", tag_levels = "A") &
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24)) & theme(plot.tag = element_text(size=24)) 
+```
+
+```{r ObjectPreferencePlot, echo=F, warning=F, dpi=250, fig.height=4, fig.width=8, out.height=400, out.width=800}
+ObjectPrefEntryPlots
 ```
 
 The combination of functions and plotting features will allow for easier analysis of the `DeepLabCut` output and make data more approachable. Future features will include measures to quantify behaviour and adjustments to object plotting and analysis allowing for more flexibility.

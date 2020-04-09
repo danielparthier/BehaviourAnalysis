@@ -30,8 +30,8 @@ DeepLabCutLoad <- function(FileName,
   LabelNames <- data.table::fread(file = FileName, nrows = 1)
   # Construct unique columns
   ColumnNames <- paste(LabelNames, colnames(DataSet), sep="_")
-  message(paste("all labels:", paste0(unlist(strsplit(x = grep(pattern = "_likelihood", x = ColumnNames, value = T),
-                                                      split = "_likelihood")), collapse = "\n")))
+  message("all labels:\n", paste0(unlist(strsplit(x = grep(pattern = "_likelihood", x = ColumnNames, value = T),
+                                                      split = "_likelihood")), collapse = "\n"), "\n")
   colnames(DataSet) <- ColumnNames
   # Correct for inverse y coordinates
   DataSet[, (grep("_y", colnames(DataSet))) := 
@@ -177,8 +177,10 @@ CoordInterp <- function(CoordTable, CoordRef, interpWindow = 21) {
     iteration <- iteration+1
     cutWindow <- cutWindow+1
   }
-  message(paste("Correction applied for",CoordRef, "\nCutting window:",iteration-1))
-  if(iteration == 10) {
+  if(length(MissLoc)!=0) {
+    message(paste("Correction applied for",CoordRef, "\nCutting window:",iteration-1))
+  }
+    if(iteration == 10) {
     warning(paste("Iterationn exceeded limit for", CoordRef))
   }
 }

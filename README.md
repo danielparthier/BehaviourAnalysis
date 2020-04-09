@@ -1,16 +1,6 @@
 README
 ================
 
-``` r
-knitr::opts_chunk$set(echo = F)
-library(BehaviouR)
-#library(data.table)
-library(ggplot2)
-library(patchwork)
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
-knitr::opts_chunk$set(echo=T,   fig.path = "README_figs/README-")
-```
-
 # BehaviouR
 
 The task in the video is based on the *Novel-Object Recognition Task*.
@@ -43,10 +33,17 @@ DeepLabCout output. In the following example *ear*, *nose* and *ear*,
 label which contains the term. Therefore, *leftear* and *rightear* are
 both included. However, this requires explicit labels in cases where
 only one of the two is required. The scaling arguments can be used to
-adjust for the unit size per pixel.
+adjust for the unit size per pixel. The tracked labels will be checked
+for irregularities based on the distribution of the differences over
+time. If the coordinates are detected as outliers they will be removed
+and interpolated by B-splines.
 
 ``` r
 library(BehaviouR)
+library(ggplot2)
+library(patchwork)
+library(data.table)
+
 MouseBodyList <- list()
 MouseBodyList$head <- c("ear", "nose")
 MouseBodyList$body <- c("ear", "tail")
@@ -57,8 +54,21 @@ MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  MouseLabels = MouseBodyList,
                                  ObjectLabels = ObjectList,
                                  ObjectNumber = ObjectNumber,
-                                 xScale = 1,
-                                 yScale = 1)
+                                 xScale = 0.91,
+                                 yScale = 0.91,
+                                 JumpCorrections = T,
+                                 includeAll = F)
+```
+
+    ## all labels:
+    ## leftear
+    ## rightear
+    ## nose
+    ## tailbase
+    ## object1
+    ## object2
+
+``` r
 summary(MouseDataTable)
 ```
 
@@ -140,6 +150,35 @@ AddCentroid(CoordTable = MouseDataTable$DataTable,
             OutputName = "BetweenEars")
 ```
 
+We can also calculate the angle difference for every object, meaning the
+of the head in relation to the object, and the entries for the zone
+around the object which we will specify based on two criteria. Firstly,
+the distance to the centre of the object which we will define by the 95
+percentile of the animal length. Secondly, the viewing angle to the
+object. The idea behind the angle is to validate active approaching
+which requires to look into the direction of the object opposed to
+passing by randomly. The cut-off for the angle can be adjusted and is
+set here to a ±10th pi, which is a 5th of a circle.
+
+``` r
+for(i in MouseDataTable$ObjectTable$ObjectLoc) {
+  ObjectString <- grep(pattern = paste0("^", i, "[_][alphanum]",".*","[_]Angle", "$"),
+       x = colnames(MouseDataTable$DataTable),
+       value = T)
+  AngleDiff(CoordTable = MouseDataTable$DataTable,
+            Angle2 = "HeadAngle",
+            Angle1 = ObjectString,
+            OutputName = paste0(i,"_HeadAngle_Angle"))
+  ZoneEntry(CoordTable = MouseDataTable$DataTable,
+            DistanceRef = paste0(i,"_headCentroid_Distance"),
+            Length = quantile(MouseDataTable$DataTable$BodyLength, 0.95),
+            AngleInclusion = T,
+            AngleRef = paste0(i,"_HeadAngle_Angle"),
+            AngleRange = pi/10, 
+            Overwrite = T)
+}
+```
+
 ## Plotting Data
 
 The data can be plotted using functions and strings as references. For
@@ -157,37 +196,42 @@ SpeedPlot <- SpeedPlot(DataTable = MouseDataTable$DataTable,
                        Speed = "SpeedbodyCentroid",
                        x = "headCentroid_x",
                        y = "headCentroid_y",
-                       ObjectTable = MouseDataTable$ObjectTable)
+                       ObjectTable = MouseDataTable$ObjectTable,
+                       Unit = "cm/s")
 
 DensityPlot <- LocationPlot(DataTable = MouseDataTable$DataTable,
-                         x = "headCentroid_x",
-                         y = "headCentroid_y",
-                         ObjectTable = MouseDataTable$ObjectTable,
-                         Density = T)
+                            x = "headCentroid_x",
+                            y = "headCentroid_y",
+                            ObjectTable = MouseDataTable$ObjectTable,
+                            Density = T)
 
 
 if(ObjectNumber>0) {
   ObjectAnglePlots <- lapply(X = 1:ObjectNumber, FUN = function(objID) {
     AnglePlot(DataTable = MouseDataTable$DataTable,
-              Angle = paste0("object_",objID,"_headCentroid_Angle"),
+              Angle = paste0("object_",objID,"_HeadAngle_Angle"),
               x = "headCentroid_x",
               y = "headCentroid_y",
               ObjectTable = MouseDataTable$ObjectTable,
-              colourScheme = "dark")
+              colourScheme = "light",
+              ObjectHighlight = "alpha")
   })   
 }
 
 
 SpeedPlotLine <- SpeedPlot(DataTable = MouseDataTable$DataTable,
-                           Speed = "SpeedbodyCentroid")
+                           Speed = "SpeedbodyCentroid",
+                           Unit = "cm/s")
 
 DistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
-                                 Distance = "CumDistbodyCentroid")
+                                 Distance = "CumDistbodyCentroid",
+                                 Unit = "cm")
 
 ObjectDistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
                                        Distance = "headCentroid_Distance",
                                        ObjectTable = MouseDataTable$ObjectTable,
-                                       ObjectDistance = T)
+                                       ObjectDistance = T,
+                                       Unit = "cm")
 
 RearingPlotLine <- LengthPlot(DataTable = MouseDataTable$DataTable,
                               Length = "BodyLength")
@@ -196,8 +240,12 @@ RearingPlot <- LengthPlot(DataTable = MouseDataTable$DataTable,
                           Length = "BodyLength",
                           x = "headCentroid_x",
                           y = "headCentroid_y",
-                          ObjectTable = MouseDataTable$ObjectTable)
+                          ObjectTable = MouseDataTable$ObjectTable) +
+  scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE, reverse = T), direction = -1)
 ```
+
+    ## Scale for 'colour' is already present. Adding another scale for 'colour',
+    ## which will replace the existing scale.
 
 The plots can be arranged and panels generated by using the `patchwork`
 library.
@@ -205,29 +253,35 @@ library.
 ``` r
 # Arrange Plots
 if(ObjectNumber>0) {
-  MovementPlot <- (SpeedPlot | ObjectAnglePlots[[1]] | ObjectAnglePlots[[2]]) / ObjectDistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24))
-  ggsave(plot = MovementPlot, filename = "Plots/MovementPlot.pdf", device = "pdf", width = 10.4, height = 6)
+  MovementPlot <- (SpeedPlot | ObjectAnglePlots[[1]] | ObjectAnglePlots[[2]]) / ObjectDistancePlotLine &
+    plot_annotation(title = "Movement and Object Parameters", subtitle = "Different parameters measured during exploration.",tag_levels = "A") &
+    theme(plot.title = element_text(size=20),plot.tag = element_text(size=24))
 }
 
-OutPutPlotRearing <- RearingPlotLine + RearingPlot + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
-OutPutPlotMap <- SpeedPlot + DensityPlot + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
-OutPutPlotMovement <- SpeedPlotLine + DistancePlotLine + plot_annotation(tag_levels = "A") & theme(plot.tag = element_text(size=24)) 
-
-ggsave(plot = OutPutPlotMap, filename = "Plots/OutPutPlotMap.pdf", device = "pdf", width = 10.4, height = 4)
-ggsave(plot = OutPutPlotMovement, filename = "Plots/OutPutPlotMovement.pdf", device = "pdf", width = 10.4, height = 4)
-ggsave(plot = ObjectDistancePlotLine, filename = "Plots/ObjectDistancePlotLine.pdf", device = "pdf", width = 5, height = 3)
-ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlot.pdf", device = "pdf", width = 5, height = 3)
+OutPutPlotRearing <- RearingPlotLine + RearingPlot &
+  plot_annotation(tag_levels = "A") & 
+  plot_annotation(title = "Rearing", subtitle = "Rearing during exploration is mainly seen close to walls or objects.",tag_levels = "A") &
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24))
+OutPutPlotMap <- (SpeedPlot + DensityPlot) + plot_annotation(tag_levels = "A") &
+  plot_annotation(title = "Exploration", subtitle = "Speed and location during exploration of arena.",tag_levels = "A") &
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24))
+OutPutPlotMovement <- SpeedPlotLine + DistancePlotLine + plot_annotation(tag_levels = "A") &
+  plot_annotation(title = "Speed and Distance", subtitle = "Parameters are measured over time.",tag_levels = "A") &
+  theme(plot.title = element_text(size=20),plot.tag = element_text(size=24)) & theme(plot.tag = element_text(size=24)) 
 ```
 
 The plot for speed (2D) and occupancy (2D):
-<img src="README_figs/README-OutPutPlotMap-1.png" width="800" height="350" />
+<img src="README_figs/README-OutPutPlotMap-1.png" width="800" height="400" />
+
 The plot for speed (1D) and Distance (1D):
-<img src="README_figs/README-OutPutPlotMovement-1.png" width="800" height="400" />
+<img src="README_figs/README-OutPutPlotMovement-1.png" width="800" height="450" />
+
 The plot for stationary object distances:
-<img src="README_figs/README-ObjectDistancePlotLine-1.png" width="800" height="400" />
+<img src="README_figs/README-ObjectDistancePlotLine-1.png" width="800" height="450" />
+
 The plots for speed, object approach angle for both objects, and the
 distance to the objects over time:
-<img src="README_figs/README-MovementPlot-1.png" width="800" height="400" />
+<img src="README_figs/README-MovementPlot-1.png" width="800" height="450" />
 
 The last plot shows the rearing measured as the length of the body. If
 the animal is walking normally the vector length will be long. If the
@@ -237,13 +291,15 @@ animal rears, meaning it will get up, the vector will be shorter.
 Any further adjustments or changes to the plot can be appended. For
 example when a different label is required one can add the `ggplot2`
 functions to the generated plot. In the following case we want to change
-the *“Length (px)”* to a more general *“Rearing”*. Further we will
-remove the numbers (*label*) next to the colour bar. Since it is a
+the *“Rearing”* to a more specific *“Normalised Rearing”*. Further we
+will remove the numbers (*label*) next to the colour bar. Since it is a
 arbitrary measure absolute numbers might not be required.
 
 ``` r
 RearingPlot+
-  scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE), direction = -1)
+  scale_color_viridis_c(option = "magma",guide = guide_colourbar(title = "Normalised\nRearing", label = FALSE, ticks = F), direction = -1) & 
+  plot_annotation(title = "Rearing during exploration", subtitle = "The change of posture can be reflected in the rearing.") &
+  theme(plot.title = element_text(size=20))
 ```
 
     ## Scale for 'colour' is already present. Adding another scale for 'colour',
@@ -251,9 +307,22 @@ RearingPlot+
 
 <img src="README_figs/README-ChangeAxis-1.png" width="500" height="400" />
 
-``` r
-ggsave(plot = OutPutPlotRearing, filename = "Plots/RearingPlotColourbar.pdf", device = "pdf", width = 5, height = 3)
-```
+With the given `DataTable` structure we can further compute parameters
+derived from the interaction with the objects. One example would be to
+estimate the preference for an object based on the entries. To get an
+estimate given the data we have we can use the binomial distribution
+*Binom(n,p)* and the beta distribution *Beta(a, b)* Using this
+distribution we will get a Bayesian estimate of the preference parameter
+*X \~ Beta(a, b)*. The binomial and beta distribution are conjugate,
+meaning we can use a beta distribution as a prior which in our case is
+*Beta(1, 1)*. A flat prior which attributes all probabilities equally.
+When updating the function after getting new data we will update *a* and
+*b*. Let’s assume we count 5 entries at on object and 5 at the other we
+would update the function such as *X* *\~* *Beta(1+5, 1+5)*. Therefore
+we reallocate all the probabilities according to the data and get a
+distribution of possible outcomes.
+
+<img src="README_figs/README-ObjectPreferencePlot-1.png" width="800" height="400" />
 
 The combination of functions and plotting features will allow for easier
 analysis of the `DeepLabCut` output and make data more approachable.

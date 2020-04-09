@@ -33,7 +33,7 @@ MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  ObjectNumber = ObjectNumber,
                                  xScale = 1,
                                  yScale = 1,
-                                 JumpCorrections = F,
+                                 JumpCorrections = T,
                                  includeAll = F)
 
 # compute body motion properties
