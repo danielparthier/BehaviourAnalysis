@@ -9,7 +9,7 @@ CustomColourPalette(Mode = "dark", n = 5)
 \arguments{
 \item{Mode}{A string for the colour scheme ("dark", "light").}
 
-\item{n}{An interger indicating length of output.}
+\item{n}{An integer indicating length of output.}
 }
 \value{
 Returns a vector string containing colours in hex-code.

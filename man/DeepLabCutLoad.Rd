@@ -2,7 +2,7 @@
 % Please edit documentation in R/DataLoad.R
 \name{DeepLabCutLoad}
 \alias{DeepLabCutLoad}
-\title{Load data and generate coordinate table and object table}
+\title{This function generates a DataTable from a csv exported with DeepLabCut and computes parameters as Speed/Distance, and other object related features.}
 \usage{
 DeepLabCutLoad(
   FileName,
@@ -37,8 +37,6 @@ DeepLabCutLoad(
 \item{interpWindow}{An integer determining the length of spline fitting area around artefact.}
 
 \item{includeAll}{A bool indicating if other labels should be imported as well (default = TRUE).}
-
-\item{cutWindow}{An integer determining the length of cut-out around artefact.}
 }
 \value{
 Generate DataTable from CSV file

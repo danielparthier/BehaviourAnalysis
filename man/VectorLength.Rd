@@ -15,10 +15,10 @@ VectorLength(CoordTable, VectorStart, VectorEnd, OutputName, Overwrite = TRUE)
 
 \item{OutputName}{A string indicating the label used as output.}
 
-\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
+\item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
-Modifys existing DataTable.
+Modifies existing DataTable.
 }
 \description{
 This function calculates the vector length of two points at any given point in time.

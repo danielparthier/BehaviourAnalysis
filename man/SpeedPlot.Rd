@@ -18,9 +18,9 @@ SpeedPlot(
 
 \item{Speed}{A string referencing the speed column.}
 
-\item{x}{A string referencing the x-cordinate column.}
+\item{x}{A string referencing the x-coordinate column.}
 
-\item{y}{A string referencing the y-cordinate column.}
+\item{y}{A string referencing the y-coordinate column.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 

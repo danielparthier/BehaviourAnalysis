@@ -16,9 +16,9 @@ LocationPlot(
 \arguments{
 \item{DataTable}{A data.table used as input.}
 
-\item{x}{A string referencing the x-cordinate column.}
+\item{x}{A string referencing the x-coordinate column.}
 
-\item{y}{A string referencing the y-cordinate column.}
+\item{y}{A string referencing the y-coordinate column.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
@@ -27,10 +27,10 @@ LocationPlot(
 \item{BinNumber}{An integer indicating the number of bins for the density (default = 500).}
 }
 \value{
-Returns a ggplot.
+Returns a ggplot2::ggplot.
 }
 \description{
 This function plots the speed of the object used as speed reference. When adding the x/y 
-references a 2D-plot is drawn using colour-coding for the speed. If the x/y inforamtion 
+references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 is omitted the speed will be plotted against time.
 }

@@ -17,9 +17,11 @@ AnglePlot(
 \arguments{
 \item{DataTable}{A data.table used as input.}
 
-\item{x}{A string referencing the x-ccordinate column.}
+\item{Angle}{A string referencing the angle.}
 
-\item{y}{A string referencing the y-ccordinate column.}
+\item{x}{A string referencing the x-coordinate column.}
+
+\item{y}{A string referencing the y-coordinate column.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
@@ -28,10 +30,10 @@ AnglePlot(
 \item{ObjectHighlight}{A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none" or colour valid string).}
 }
 \value{
-Returns a ggplot.
+Returns a gggplot.
 }
 \description{
 This function plots the speed of the object used as speed reference. When adding the x/y 
-references a 2D-plot is drawn using colour-coding for the speed. If the x/y inforamtion 
+references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 is omitted the speed will be plotted against time.
 }

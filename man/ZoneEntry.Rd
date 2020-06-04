@@ -19,7 +19,7 @@ ZoneEntry(
 
 \item{DistanceRef}{A string indicating the distance reference column.}
 
-\item{Length}{double as distance cutoff for zone.}
+\item{Length}{double as distance cut-off for zone.}
 
 \item{AngleInclusion}{A bool indicating if angles should be considered for entry detection.}
 
@@ -27,7 +27,7 @@ ZoneEntry(
 
 \item{AngleRange}{A double as indicating the angle range (+/-).}
 
-\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
+\item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Modifies existing DataTable.

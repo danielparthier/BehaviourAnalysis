@@ -19,9 +19,9 @@ LengthPlot(
 
 \item{Length}{A string referencing the Length column.}
 
-\item{x}{A string referencing the x-cordinate column.}
+\item{x}{A string referencing the x-coordinate column.}
 
-\item{y}{A string referencing the y-cordinate column.}
+\item{y}{A string referencing the y-coordinate column.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
@@ -34,7 +34,7 @@ Returns a ggplot.
 }
 \description{
 This function plots the Length of the object used as Length reference. When adding the x/y 
-references a 2D-plot is drawn using colour-coding for the Length If the x/y inforamtion 
+references a 2D-plot is drawn using colour-coding for the Length If the x/y information 
 is omitted the Length will be plotted against time. The length of a vector can be used to 
 estimate rearing or other postures.
 }
