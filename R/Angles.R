@@ -6,7 +6,7 @@
 #' @param VectorStart A table including the objects.
 #' @param VectorEnd A vector string indicating the labels used for computing object angle.
 #' @param OutputName A string indicating the label used for object angle.
-#' @param Overwrite A bool indicating if ouput should be overwritten if it exists already (default = TRUE).
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
 #' @return Modifies existing DataTable.
 #' @export
@@ -44,6 +44,7 @@ AngleDiff <- function(CoordTable,
                       Angle2,
                       OutputName,
                       Overwrite = TRUE) {
+  tmp <- NULL
   if(sum(names(CoordTable) %in% Angle1) == 0) {
     stop("Angle1 not found")
   } else if(sum(names(CoordTable) %in% Angle2) == 0) {

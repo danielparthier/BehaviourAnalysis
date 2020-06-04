@@ -5,9 +5,9 @@
 #' @param VectorStart A string indicating the label used for start of vector.
 #' @param VectorEnd A string indicating the label used for end of vector.
 #' @param OutputName A string indicating the label used as output.
-#' @param Overwrite A bool indicating if ouput should be overwritten if it exists already (default = TRUE).
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
-#' @return Modifys existing DataTable.
+#' @return Modifies existing DataTable.
 #' @export
 VectorLength <- function(CoordTable,
                          VectorStart,

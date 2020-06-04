@@ -1,5 +1,83 @@
 #' Load data and generate coordinate table and object table
 #'
+#' Calculate centroid
+#'
+#' This function calculates the centroid of object with .
+#' @param CoordTable DataTable with coordinates.
+#' @param CornerNames A vector string with labels .
+#' @param ReferenceColumn A string indicating the reference column.
+#' @param OutputName A string for output.
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
+#' 
+#' @return Add centroid coordinates
+#' @export
+AddCentroid <- function(CoordTable,
+                        CornerNames,
+                        ReferenceColumn,
+                        OutputName,
+                        Overwrite = TRUE) {
+  if(!Overwrite) {
+    OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
+  }
+  if(length(CornerNames)>1) {
+    ColumnSearch <- paste0(unique(unlist(CornerNames)), collapse = "|")
+  } else if(length(CornerNames)==1) {
+    ColumnSearch <- unlist(CornerNames)
+  } else {
+    stop("no search term")
+  }
+  
+  CornerCount <- sum(data.table::like(vector = names(CoordTable),
+                                      pattern = ColumnSearch)
+                     & data.table::like(vector = names(CoordTable),
+                                        pattern = "_x|_y"))/2
+  if(!(CornerCount %% 1)) {
+    CoordTable[,paste0(OutputName, "_x"):=sum(.SD)/CornerCount,
+               .SDcols = data.table::like(vector = names(CoordTable),
+                                          pattern = ColumnSearch,
+                                          ignore.case = T)
+               & data.table::like(vector = names(CoordTable),
+                                  pattern = "_x"),
+               by = ReferenceColumn][
+                 ,paste0(OutputName, "_y"):=sum(.SD)/CornerCount,
+                 .SDcols = data.table::like(vector = names(CoordTable),
+                                            pattern = ColumnSearch,
+                                            ignore.case = T)
+                 & data.table::like(vector = names(CoordTable),
+                                    pattern = "_y"),
+                 by = ReferenceColumn]
+  } else if(CornerCount > 3) {
+    warning(paste("more than than 3 points for centroid estimation:", CornerCount))
+  } else {
+    stop(paste("missing coordinate for centroid estimation:", CornerCount))
+  }
+}
+
+#' Wrapper for centroid calculation
+#'
+#' This function calculates the centroid of object with .
+#' @param CoordTable DataTable with coordinates.
+#' @param MouseLabels A vector string with labels.
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
+#' 
+#' @return Add centroid coordinates
+#' @export
+CentroidCollect <- function(CoordTable,
+                            MouseLabels,
+                            Overwrite = TRUE){
+  for(i in 1:length(MouseLabels)) {
+    if(!Overwrite) {
+      OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = paste0(names(MouseLabels)[i], "Centroid"))
+    } else {
+      OutputName <- paste0(names(MouseLabels)[i], "Centroid")
+    }
+    AddCentroid(CornerNames = MouseLabels[[i]],
+                CoordTable = CoordTable,
+                ReferenceColumn = "frame",
+                OutputName = OutputName)
+  }
+}
+
 #' This function generates a DataTable from a csv exported with DeepLabCut and computes parameters as Speed/Distance, and other object related features.
 #' @param FileName Name of CSV file including the path.
 #' @param FrameRate A double indicating the frame rate.
@@ -10,7 +88,6 @@
 #' @param yScale A double representing the scaling factor.
 #' @param JumpCorrections A bool indicating correction of label jump artefacts.
 #' @param interpWindow An integer determining the length of spline fitting area around artefact.
-#' @param cutWindow An integer determining the length of cut-out around artefact.
 #' @param includeAll A bool indicating if other labels should be imported as well (default = TRUE).
 #' @import data.table
 #' 
@@ -26,6 +103,11 @@ DeepLabCutLoad <- function(FileName,
                            JumpCorrections = T,
                            interpWindow = 21,
                            includeAll = T) {
+  frame <- NULL
+  x <- NULL
+  y <- NULL
+  ObjectLoc <- NULL
+  Names <- NULL
   DataSet <- data.table::fread(file = FileName, skip = 2)
   LabelNames <- data.table::fread(file = FileName, nrows = 1)
   # Construct unique columns
@@ -88,12 +170,12 @@ DeepLabCutLoad <- function(FileName,
                                         y = data.table::melt.data.table(data = DataSet[,.SD,
                                                                                        .SDcols = ObjNames_y],
                                                                         measure.vars = ObjNames_y)$value)
-    ObjectSet$ObjectLoc <- kmeans(x = ObjectSet[,.(x,y)], centers = ObjectNumber)$cluster
+    ObjectSet$ObjectLoc <- stats::kmeans(x = ObjectSet[,list(x,y)], centers = ObjectNumber)$cluster
     ObjectSet$Names <- rep(x = unique(unlist(ObjectLabels)), each = dim(DataSet)[1]*ObjectNumber)
     ObjectSet[,ObjectLoc:=paste0(Names, "_", ObjectLoc)]
     
     # Generate object coordinate table
-    ObjectCoord <- ObjectSet[,.(x=median(x),y=median(y)), by=ObjectLoc]
+    ObjectCoord <- ObjectSet[,list(x=stats::median(x),y=stats::median(y)), by=ObjectLoc]
   }
   if(includeAll) {
     RestColumns <- DataSet[,.SD,
@@ -137,15 +219,15 @@ DeepLabCutLoad <- function(FileName,
 
 ##### formula for fitting t-distribution
 fitDT <- function(par, x){
-  -sum(dt(x = x-par[2], df = par[1], log = T))
+  -sum(stats::dt(x = x-par[2], df = par[1], log = T))
 }
 
 ##### Interpolation of coordinates
 CoordInterp <- function(CoordTable, CoordRef, interpWindow = 21) {
-  par <- suppressWarnings(nlminb(x = diff(CoordTable[,get(CoordRef)]),
+  par <- suppressWarnings(stats::nlminb(x = diff(CoordTable[,get(CoordRef)]),
                                  fitDT,
                                  start = c(1,0))$par)
-  MissLoc <- (1:CoordTable[,.N])[dt(x = diff(CoordTable[,get(CoordRef)])-par[2], df = par[1], log = T) < -10]+1
+  MissLoc <- (1:CoordTable[,.N])[stats::dt(x = diff(CoordTable[,get(CoordRef)])-par[2], df = par[1], log = T) < -10]+1
   iteration <- 1
   cutWindow <- 0
   while(length(MissLoc)!=0 & !is.null(MissLoc) & iteration < 10) {
@@ -163,17 +245,17 @@ CoordInterp <- function(CoordTable, CoordRef, interpWindow = 21) {
       tmpLoc <- MissLoc[data.table::between(x = MissLoc, lower = startPoint, upper = endPoint)]
       modelSpline <- splines::interpSpline(obj2 = CoordTable[(startPoint:endPoint)[!(startPoint:endPoint) %in% tmpLoc],get(CoordRef)],
                                            obj1 = (startPoint:endPoint)[!(startPoint:endPoint) %in% tmpLoc])
-      CoordTable[tmpLoc, eval(CoordRef) := predict(object = modelSpline,
+      CoordTable[tmpLoc, eval(CoordRef) := stats::predict(object = modelSpline,
                                                    x = extractIDX)$y,]
       if(i!=length(MissLoc)) {
         startPoint <- MissLoc[i+1]-jumpLength
         endPoint <- MissLoc[i+1]+jumpLength
       }
     }
-    par <- suppressWarnings(nlminb(x = diff(CoordTable[,get(CoordRef)]),
+    par <- suppressWarnings(stats::nlminb(x = diff(CoordTable[,get(CoordRef)]),
                                    fitDT,
                                    start = c(1,0))$par)
-    MissLoc <- (1:CoordTable[,.N])[dt(x = diff(CoordTable[,get(CoordRef)])-par[2], df = par[1], log = T) < -10]+1
+    MissLoc <- (1:CoordTable[,.N])[stats::dt(x = diff(CoordTable[,get(CoordRef)])-par[2], df = par[1], log = T) < -10]+1
     iteration <- iteration+1
     cutWindow <- cutWindow+1
   }

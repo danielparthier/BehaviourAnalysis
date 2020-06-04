@@ -12,6 +12,9 @@ ObjectDistance <- function(CoordTable,
                            ObjectTable,
                            ObjectLabels,
                            Ref) {
+  ObjectLoc <- NULL
+  x <- NULL
+  y <- NULL
   for(i in 1:dim(ObjectTable)[1]) {
     ObjectName <- ObjectTable[i, ObjectLoc]
     DistanceName <- VariableNameCheck(DataTable = CoordTable,
@@ -43,6 +46,9 @@ ObjectAngle <- function(CoordTable,
                         ObjectTable,
                         ObjectLabels,
                         Ref) {
+  ObjectLoc <- NULL
+  x <- NULL
+  y <- NULL
   for(i in 1:dim(ObjectTable)[1]) {
     ObjectName <- ObjectTable[i, ObjectLoc]
     AngleName <- VariableNameCheck(DataTable = CoordTable,
@@ -66,11 +72,11 @@ ObjectAngle <- function(CoordTable,
 #' This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
 #' @param CoordTable A table including coordinates of labels.
 #' @param DistanceRef A string indicating the distance reference column.
-#' @param Length  double as distance cutoff for zone.
+#' @param Length  double as distance cut-off for zone.
 #' @param AngleInclusion A bool indicating if angles should be considered for entry detection.
 #' @param AngleRef A string indicating angle reference column.
 #' @param AngleRange A double as indicating the angle range (+/-).
-#' @param Overwrite A bool indicating if ouput should be overwritten if it exists already (default = TRUE).
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
 #' @return Modifies existing DataTable.
 #' @export

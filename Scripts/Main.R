@@ -5,12 +5,20 @@ library(patchwork)
 library(data.table)
 
 FileList <- list.files(path = "~/PhD/Data/Behaviour/", ".csv")
+
 for(FileCount in seq_along(FileList)) {
   FileName <- paste0("~/PhD/Data/Behaviour/", FileList[FileCount])
   SplitName <- unlist(strsplit(x = FileList[FileCount], split = "_"))
-  AnimalID <- SplitName[2]
+  AnimalID <- paste0("DSC",gsub("[^[:digit:]]", "", grep(pattern = "dsc", x = SplitName, value = T, ignore.case = T)))
   ExpDate <- SplitName[1]
-  NovelObjectLocation <- unlist(strsplit(x = SplitName[6], "Mar"))[1]
+  if(any(grepl(pattern = "left", x = SplitName, ignore.case = T))) {
+    NovelObjectLocation <- "left"
+  } else if(any(grepl(pattern = "right", x = SplitName, ignore.case = T))) {
+    NovelObjectLocation <- "right"
+  } else {
+    warning("No novel object indicated in file name")
+  }
+    #unlist(strsplit(x = SplitName[6], "Mar"))[1]
 # FileName <- paste0("RawData/20180903_Schmitz_PaS_B1_C1_NL_",
 #                   "Day1_NOVEL_DSC001663DLC_resnet50_NOVEL_",
 #                   "VIDEONov7shuffle1_100000.csv")
@@ -31,8 +39,8 @@ MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  MouseLabels = MouseBodyList,
                                  ObjectLabels = ObjectList,
                                  ObjectNumber = ObjectNumber,
-                                 xScale = 1,
-                                 yScale = 1,
+                                 xScale = 4,
+                                 yScale = 4,
                                  JumpCorrections = T,
                                  includeAll = F)
 
@@ -227,7 +235,8 @@ ObjectPrefEntryPlots <- ObjectPref + ObjectPrefTime + plot_layout(ncol=2,widths=
 
 OverAllPlot <- (SpeedPlot + RearingPlot + DensityPlot) / (ObjectAnglePlots[[1]] + ObjectAnglePlots[[2]] + ObjectDistancePlotLine) / (ObjectPref + ObjectPrefTime) + plot_annotation(title = paste("Overview for Animal:",AnimalID,"on", ExpDate), tag_levels = "A") & theme(plot.title = element_text(size=20),plot.tag = element_text(size=24))
 
-ggsave(plot = OverAllPlot, filename = paste0("Plots/OverAllPlot","_",AnimalID,"_", ExpDate,".pdf"), device = "pdf", width = 12, height = 10)
+##### save overview ####
+#ggsave(plot = OverAllPlot, filename = paste0("Plots/OverAllPlot","_",AnimalID,"_", ExpDate,".pdf"), device = "pdf", width = 12, height = 10)
 
 # time spent at object in total
 TimeAtObject <- sapply(c("Novel", "Old"), FUN = function(x){
@@ -246,6 +255,8 @@ TimeAtObjectOverTime <- rbindlist(lapply(c("Novel", "Old"), FUN = function(x){
 
 # calculate index from total time spent at object
 (TimeAtObject[1]-TimeAtObject[2])/(TimeAtObject[1]+TimeAtObject[2])
+
+MouseDataTable$DataTable[,`:=`(Animal=AnimalID, Date=ExpDate, Site=NovelObjectLocation),]
 
 
 if(FileCount == 1) {
