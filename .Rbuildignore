@@ -1,0 +1,7 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^Scripts
+^README_figs
+^RawData
+^Report
+^Plots
