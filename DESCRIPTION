@@ -1,7 +1,7 @@
 Package: BehaviouR
 Type: Package
 Title: Analysis of DeepLabCut output in R
-Version: 0.1
+Version: 0.1.2
 Date: 2020-03-05
 Author: Daniel Parthier
 Maintainer: Daniel Parthier <your@email.com>
