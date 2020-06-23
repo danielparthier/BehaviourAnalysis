@@ -7,10 +7,10 @@
 SpeedPlot(
   DataTable,
   Speed,
-  x = NULL,
-  y = NULL,
+  CoordRef = NULL,
   ObjectTable = NULL,
-  Unit = "px/s"
+  Unit = "px/s",
+  FacetRef = NULL
 )
 }
 \arguments{
@@ -18,19 +18,19 @@ SpeedPlot(
 
 \item{Speed}{A string referencing the speed column.}
 
-\item{x}{A string referencing the x-coordinate column.}
-
-\item{y}{A string referencing the y-coordinate column.}
+\item{CoordRef}{A string referencing coordinate columns.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
 \item{Unit}{A string indicating the speed unit (default = "px/s").}
+
+\item{FacetRef}{A string as reference for facet wrap (for multi-view).}
 }
 \value{
 Returns a ggplot.
 }
 \description{
 This function plots the speed of the object used as speed reference. When adding the x/y 
-references a 2D-plot is drawn using colour-coding for the speed. If the x/y inforamtion 
+references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 is omitted the speed will be plotted against time.
 }
