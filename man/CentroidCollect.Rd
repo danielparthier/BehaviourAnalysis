@@ -9,7 +9,7 @@ CentroidCollect(CoordTable, MouseLabels, Overwrite = TRUE)
 \arguments{
 \item{CoordTable}{DataTable with coordinates.}
 
-\item{MouseLabels}{A vector string with labels.}
+\item{MouseLabels}{A list with string vectors for labels.}
 
 \item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
@@ -17,5 +17,6 @@ CentroidCollect(CoordTable, MouseLabels, Overwrite = TRUE)
 Add centroid coordinates
 }
 \description{
-This function calculates the centroid of object with .
+This function is a wrapper for the \code{AddCentroid} and allows computation of 
+centroids for multiple object groups provided by a list.
 }

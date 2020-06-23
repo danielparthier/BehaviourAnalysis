@@ -7,11 +7,11 @@
 AnglePlot(
   DataTable,
   Angle,
-  x = NULL,
-  y = NULL,
+  CoordRef = NULL,
   ObjectTable = NULL,
   colourScheme = "dark",
-  ObjectHighlight = "alpha"
+  ObjectHighlight = "alpha",
+  FacetRef = NULL
 )
 }
 \arguments{
@@ -19,18 +19,18 @@ AnglePlot(
 
 \item{Angle}{A string referencing the angle.}
 
-\item{x}{A string referencing the x-coordinate column.}
-
-\item{y}{A string referencing the y-coordinate column.}
+\item{CoordRef}{A string referencing coordinate columns.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
 \item{colourScheme}{A string indicating the colour scheme (default = "dark").}
 
 \item{ObjectHighlight}{A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none" or colour valid string).}
+
+\item{FacetRef}{A string as reference for facet wrap (for multi-view).}
 }
 \value{
-Returns a gggplot.
+Returns a ggplot.
 }
 \description{
 This function plots the speed of the object used as speed reference. When adding the x/y 

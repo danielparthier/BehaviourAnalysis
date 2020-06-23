@@ -2,7 +2,7 @@
 % Please edit documentation in R/DataLoad.R
 \name{DeepLabCutLoad}
 \alias{DeepLabCutLoad}
-\title{This function generates a DataTable from a csv exported with DeepLabCut and computes parameters as Speed/Distance, and other object related features.}
+\title{Load data and generate coordinate table and object table}
 \usage{
 DeepLabCutLoad(
   FileName,
@@ -42,5 +42,6 @@ DeepLabCutLoad(
 Generate DataTable from CSV file
 }
 \description{
-This function generates a DataTable from a csv exported with DeepLabCut and computes parameters as Speed/Distance, and other object related features.
+This function generates a DataTable from a csv exported with DeepLabCut and 
+computes parameters as Speed/Distance, and other object related features.
 }

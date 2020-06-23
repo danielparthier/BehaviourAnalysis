@@ -4,7 +4,13 @@
 \alias{DistSpeedCalc}
 \title{Speed/Distance/Cumulative distance}
 \usage{
-DistSpeedCalc(CoordTable, SpeedRef, Interval)
+DistSpeedCalc(
+  CoordTable,
+  SpeedRef,
+  Interval,
+  ReferenceColumn = "",
+  Overwrite = TRUE
+)
 }
 \arguments{
 \item{CoordTable}{A table including coordinates of labels.}
@@ -12,6 +18,10 @@ DistSpeedCalc(CoordTable, SpeedRef, Interval)
 \item{SpeedRef}{A string indicating the label used for computing speed.}
 
 \item{Interval}{A double corresponding to sampling rate.}
+
+\item{ReferenceColumn}{A string indicating the reference column.}
+
+\item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Modifies existing DataTable.

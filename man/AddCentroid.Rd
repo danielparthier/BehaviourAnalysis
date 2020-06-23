@@ -2,22 +2,14 @@
 % Please edit documentation in R/DataLoad.R
 \name{AddCentroid}
 \alias{AddCentroid}
-\title{Load data and generate coordinate table and object table}
+\title{Calculate centroid}
 \usage{
-AddCentroid(
-  CoordTable,
-  CornerNames,
-  ReferenceColumn,
-  OutputName,
-  Overwrite = TRUE
-)
+AddCentroid(CoordTable, CornerNames, OutputName, Overwrite = TRUE)
 }
 \arguments{
 \item{CoordTable}{DataTable with coordinates.}
 
-\item{CornerNames}{A vector string with labels .}
-
-\item{ReferenceColumn}{A string indicating the reference column.}
+\item{CornerNames}{A vector string with labels.}
 
 \item{OutputName}{A string for output.}
 
@@ -27,8 +19,6 @@ AddCentroid(
 Add centroid coordinates
 }
 \description{
-Calculate centroid
-}
-\details{
-This function calculates the centroid of object with .
+This function calculates the centroid of an object consisting of references provided
+as string vector.
 }
