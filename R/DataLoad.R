@@ -1,11 +1,10 @@
-#' Load data and generate coordinate table and object table
-#'
 #' Calculate centroid
 #'
-#' This function calculates the centroid of object with .
+#' This function calculates the centroid of an object consisting of references provided
+#' as string vector.
+#' 
 #' @param CoordTable DataTable with coordinates.
-#' @param CornerNames A vector string with labels .
-#' @param ReferenceColumn A string indicating the reference column.
+#' @param CornerNames A vector string with labels.
 #' @param OutputName A string for output.
 #' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #' 
@@ -13,7 +12,6 @@
 #' @export
 AddCentroid <- function(CoordTable,
                         CornerNames,
-                        ReferenceColumn,
                         OutputName,
                         Overwrite = TRUE) {
   if(!Overwrite) {
@@ -27,37 +25,27 @@ AddCentroid <- function(CoordTable,
     stop("no search term")
   }
   
-  CornerCount <- sum(data.table::like(vector = names(CoordTable),
-                                      pattern = ColumnSearch)
-                     & data.table::like(vector = names(CoordTable),
-                                        pattern = "_x|_y"))/2
-  if(!(CornerCount %% 1)) {
-    CoordTable[,paste0(OutputName, "_x"):=sum(.SD)/CornerCount,
+    CoordTable[,paste0(OutputName, "_x"):=mean(unlist(.SD)),
                .SDcols = data.table::like(vector = names(CoordTable),
                                           pattern = ColumnSearch,
                                           ignore.case = T)
                & data.table::like(vector = names(CoordTable),
-                                  pattern = "_x"),
-               by = ReferenceColumn][
-                 ,paste0(OutputName, "_y"):=sum(.SD)/CornerCount,
+                                  pattern = "_x"),by=rownames(CoordTable)][
+                 ,paste0(OutputName, "_y"):=mean(unlist(.SD)),
                  .SDcols = data.table::like(vector = names(CoordTable),
                                             pattern = ColumnSearch,
                                             ignore.case = T)
                  & data.table::like(vector = names(CoordTable),
-                                    pattern = "_y"),
-                 by = ReferenceColumn]
-  } else if(CornerCount > 3) {
-    warning(paste("more than than 3 points for centroid estimation:", CornerCount))
-  } else {
-    stop(paste("missing coordinate for centroid estimation:", CornerCount))
-  }
+                                    pattern = "_y"),by=rownames(CoordTable)]
 }
 
 #' Wrapper for centroid calculation
 #'
-#' This function calculates the centroid of object with .
+#' This function is a wrapper for the \code{AddCentroid} and allows computation of 
+#' centroids for multiple object groups provided by a list.
+#' 
 #' @param CoordTable DataTable with coordinates.
-#' @param MouseLabels A vector string with labels.
+#' @param MouseLabels A list with string vectors for labels.
 #' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #' 
 #' @return Add centroid coordinates
@@ -73,12 +61,15 @@ CentroidCollect <- function(CoordTable,
     }
     AddCentroid(CornerNames = MouseLabels[[i]],
                 CoordTable = CoordTable,
-                ReferenceColumn = "frame",
                 OutputName = OutputName)
   }
 }
 
-#' This function generates a DataTable from a csv exported with DeepLabCut and computes parameters as Speed/Distance, and other object related features.
+#' Load data and generate coordinate table and object table
+#' 
+#' This function generates a DataTable from a csv exported with DeepLabCut and 
+#' computes parameters as Speed/Distance, and other object related features.
+#' 
 #' @param FileName Name of CSV file including the path.
 #' @param FrameRate A double indicating the frame rate.
 #' @param MouseLabels A vector string indicating the labels used.
@@ -170,10 +161,19 @@ DeepLabCutLoad <- function(FileName,
                                         y = data.table::melt.data.table(data = DataSet[,.SD,
                                                                                        .SDcols = ObjNames_y],
                                                                         measure.vars = ObjNames_y)$value)
-    ObjectSet$ObjectLoc <- stats::kmeans(x = ObjectSet[,list(x,y)], centers = ObjectNumber)$cluster
-    ObjectSet$Names <- rep(x = unique(unlist(ObjectLabels)), each = dim(DataSet)[1]*ObjectNumber)
-    ObjectSet[,ObjectLoc:=paste0(Names, "_", ObjectLoc)]
     
+    if(length(unique(unlist(ObjectLabels)))!=ObjectNumber) {
+      ObjectLabels <- list(unlist(strsplit(names(DataSet)[data.table::like(vector = names(DataSet), pattern = "likelihood") & data.table::like(vector = names(DataSet), pattern = paste0(unique(unlist(ObjectLabels)), collapse = "|"))], split = "_likelihood")))
+    }
+    
+    ObjectSet$ObjectLoc <- stats::kmeans(x = ObjectSet[,list(x,y)], centers = ObjectNumber)$cluster
+    ObjectSet$Names <- rep(x = unique(unlist(ObjectLabels)), each = dim(DataSet)[1])
+
+    NameTransfer <- ObjectSet[,.N,by=.(ObjectLoc, Names)][,MaxVal:=ifelse(max(x = N)==N, TRUE, FALSE),by=ObjectLoc][,Names:=as.factor(Names),][MaxVal==TRUE,Names,]
+    for(i in 1:ObjectNumber) {
+      ObjectSet[ObjectLoc==i,ObjectLocNew:=NameTransfer[i],]
+    }
+    ObjectSet[,ObjectLoc:=ObjectLocNew,]
     # Generate object coordinate table
     ObjectCoord <- ObjectSet[,list(x=stats::median(x),y=stats::median(y)), by=ObjectLoc]
   }
