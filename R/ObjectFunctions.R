@@ -3,33 +3,54 @@
 #' This function calculates the distance from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
 #' @param CoordTable A table including coordinates of labels.
 #' @param ObjectTable A table including the objects.
-#' @param ObjectLabels A vector string indicating the labels used for computing object distances.
 #' @param Ref A string indicating the label used for object distance.
+#' @param ReferenceColumn A string indicating the reference column (used for batch analysis).
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
 #' @return Modifies existing DataTable.
 #' @export
 ObjectDistance <- function(CoordTable,
                            ObjectTable,
-                           ObjectLabels,
-                           Ref) {
+                           Ref,
+                           ReferenceColumn = "",
+                           Overwrite = TRUE) {
   ObjectLoc <- NULL
   x <- NULL
   y <- NULL
-  for(i in 1:dim(ObjectTable)[1]) {
+  for(i in 1:ObjectTable[,.N,by=ReferenceColumn][,unique(N),]) {
     ObjectName <- ObjectTable[i, ObjectLoc]
-    DistanceName <- VariableNameCheck(DataTable = CoordTable,
-                                      NameString = paste0(ObjectName, "_", Ref, "_Distance"))
-    objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
-    objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
-    CoordTable[,"tmp_x" := objX,][
-      ,"tmp_y" := objY,]
-    VectorLength(CoordTable = CoordTable,
-                 VectorStart = "tmp",
-                 VectorEnd = Ref,
-                 OutputName = DistanceName)
-    CoordTable[,"tmp_x":= NULL,][
-      ,"tmp_y":= NULL,]
+    if(!Overwrite) {
+      DistanceName <- VariableNameCheck(DataTable = CoordTable,
+                                        NameString = paste0(ObjectName, "_", Ref, "_Distance"))
+    } else {
+      DistanceName <-paste0(ObjectName, "_", Ref, "_Distance")
+    }
+    if(any(ReferenceColumn == colnames(CoordTable))) {
+      CoordTable[,"tmp_x":=NaN]
+      CoordTable[,"tmp_y":=NaN]
+      for(j in ObjectTable[,unique(get("FileName")),]) {
+        objX <- ObjectTable[get(ReferenceColumn)==j&ObjectLoc==eval(ObjectName),x]
+        objY <- ObjectTable[get(ReferenceColumn)==j&ObjectLoc==eval(ObjectName),y]
+        CoordTable[get(ReferenceColumn)==j,"tmp_x" := objX,][
+          get(ReferenceColumn)==j,"tmp_y" := objY,]
+      }
+      VectorLength(CoordTable = CoordTable,
+                   VectorStart = "tmp",
+                   VectorEnd = Ref,
+                   OutputName = DistanceName)
+    } else {
+      objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
+      objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
+      CoordTable[,"tmp_x" := objX,][
+        ,"tmp_y" := objY,]
+      VectorLength(CoordTable = CoordTable,
+                   VectorStart = "tmp",
+                   VectorEnd = Ref,
+                   OutputName = DistanceName)
+    }
   }
+  CoordTable[,"tmp_x":= NULL,][
+    ,"tmp_y":= NULL,]
 }
 
 #' Calculate angle to objects 
@@ -37,35 +58,55 @@ ObjectDistance <- function(CoordTable,
 #' This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
 #' @param CoordTable A table including coordinates of labels.
 #' @param ObjectTable A table including the objects.
-#' @param ObjectLabels A vector string indicating the labels used for computing object angle.
 #' @param Ref A string indicating the label used for object angle.
+#' @param ReferenceColumn A string indicating the reference column (used for batch analysis).
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
 #' @return Modifies existing DataTable.
 #' @export
 ObjectAngle <- function(CoordTable,
                         ObjectTable,
-                        ObjectLabels,
-                        Ref) {
+                        Ref,
+                        ReferenceColumn = "",
+                        Overwrite = TRUE) {
   ObjectLoc <- NULL
   x <- NULL
   y <- NULL
-  for(i in 1:dim(ObjectTable)[1]) {
+  for(i in 1:ObjectTable[,.N,by=ReferenceColumn][,unique(N),]) {
     ObjectName <- ObjectTable[i, ObjectLoc]
-    AngleName <- VariableNameCheck(DataTable = CoordTable,
-                                   NameString = paste0(ObjectName, "_", Ref, "_Angle"))
-    objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
-    objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
-    CoordTable[,"tmp_x" := objX,][
-      ,"tmp_y" := objY,]
-    AngleCalc(CoordTable = CoordTable,
-              VectorStart = Ref,
-              VectorEnd = "tmp",
-              OutputName = AngleName)
-    CoordTable[,"tmp_x":= NULL,][
-      ,"tmp_y":= NULL,]
+    if(!Overwrite) {
+      AngleName <- VariableNameCheck(DataTable = CoordTable,
+                                     NameString = paste0(ObjectName, "_", Ref, "_Angle"))
+    } else {
+      AngleName <-paste0(ObjectName, "_", Ref, "_Angle")
+    }
+    if(any(ReferenceColumn == colnames(CoordTable))) {
+      CoordTable[,"tmp_x":=NaN]
+      CoordTable[,"tmp_y":=NaN]
+      for(j in ObjectTable[,unique(get("FileName")),]) {
+        objX <- ObjectTable[get(ReferenceColumn)==j&ObjectLoc==eval(ObjectName),x]
+        objY <- ObjectTable[get(ReferenceColumn)==j&ObjectLoc==eval(ObjectName),y]
+        CoordTable[get(ReferenceColumn)==j,"tmp_x" := objX,][
+          get(ReferenceColumn)==j,"tmp_y" := objY,]
+      }
+      AngleCalc(CoordTable = CoordTable,
+                VectorStart = Ref,
+                VectorEnd = "tmp",
+                OutputName = AngleName)
+    } else {
+      objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
+      objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
+      CoordTable[,"tmp_x" := objX,][
+        ,"tmp_y" := objY,]
+      AngleCalc(CoordTable = CoordTable,
+                VectorStart = Ref,
+                VectorEnd = "tmp",
+                OutputName = AngleName)
+    }
   }
+  CoordTable[,"tmp_x":= NULL,][
+    ,"tmp_y":= NULL,]
 }
-
 
 #' Calculate entry to object
 #'
