@@ -125,7 +125,7 @@ if(ObjectNumber>0) {
               x = "headCentroid_x",
               y = "headCentroid_y",
               ObjectTable = MouseDataTable$ObjectTable,
-              colourScheme = "dark",
+              colourScheme = "light",
               ObjectHighlight = "alpha")
   })   
 }
