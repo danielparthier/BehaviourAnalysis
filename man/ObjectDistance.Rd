@@ -4,16 +4,24 @@
 \alias{ObjectDistance}
 \title{Calculate distance to objects}
 \usage{
-ObjectDistance(CoordTable, ObjectTable, ObjectLabels, Ref)
+ObjectDistance(
+  CoordTable,
+  ObjectTable,
+  Ref,
+  ReferenceColumn = "",
+  Overwrite = TRUE
+)
 }
 \arguments{
 \item{CoordTable}{A table including coordinates of labels.}
 
 \item{ObjectTable}{A table including the objects.}
 
-\item{ObjectLabels}{A vector string indicating the labels used for computing object distances.}
-
 \item{Ref}{A string indicating the label used for object distance.}
+
+\item{ReferenceColumn}{A string indicating the reference column (used for batch analysis).}
+
+\item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Modifies existing DataTable.

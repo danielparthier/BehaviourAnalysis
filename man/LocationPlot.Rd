@@ -6,28 +6,28 @@
 \usage{
 LocationPlot(
   DataTable,
-  x = NULL,
-  y = NULL,
+  CoordRef = NULL,
   ObjectTable = NULL,
   Density = TRUE,
-  BinNumber = 500
+  BinNumber = 500,
+  FacetRef = NULL
 )
 }
 \arguments{
 \item{DataTable}{A data.table used as input.}
 
-\item{x}{A string referencing the x-coordinate column.}
-
-\item{y}{A string referencing the y-coordinate column.}
+\item{CoordRef}{A string referencing coordinate columns.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
 \item{Density}{A bool indicating whether the density should be plotted.}
 
 \item{BinNumber}{An integer indicating the number of bins for the density (default = 500).}
+
+\item{FacetRef}{A string as reference for facet wrap (for multi-view).}
 }
 \value{
-Returns a ggplot2::ggplot.
+Returns a ggplot.
 }
 \description{
 This function plots the speed of the object used as speed reference. When adding the x/y 

@@ -7,11 +7,11 @@
 DistancePlot(
   DataTable,
   Distance,
-  x = NULL,
-  y = NULL,
+  CoordRef = NULL,
   ObjectTable = NULL,
   Unit = "px",
-  ObjectDistance = F
+  ObjectDistance = F,
+  FacetRef = NULL
 )
 }
 \arguments{
@@ -19,15 +19,15 @@ DistancePlot(
 
 \item{Distance}{A string referencing the distance column.}
 
-\item{x}{A string referencing the x-coordinate column.}
-
-\item{y}{A string referencing the y-coordinate column.}
+\item{CoordRef}{A string referencing coordinate columns.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
 \item{Unit}{A string indicating the speed unit (default = "px/s").}
 
 \item{ObjectDistance}{A bool indicating if reference is linked to stationary object(s) (default = FALSE).}
+
+\item{FacetRef}{A string as reference for facet wrap (for multi-view).}
 }
 \value{
 Returns a ggplot.

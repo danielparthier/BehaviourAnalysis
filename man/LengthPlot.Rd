@@ -7,11 +7,11 @@
 LengthPlot(
   DataTable,
   Length,
-  x = NULL,
-  y = NULL,
+  CoordRef = NULL,
   ObjectTable = NULL,
   Unit = "px",
-  ColourFlip = T
+  ColourFlip = T,
+  FacetRef = NULL
 )
 }
 \arguments{
@@ -19,15 +19,15 @@ LengthPlot(
 
 \item{Length}{A string referencing the Length column.}
 
-\item{x}{A string referencing the x-coordinate column.}
-
-\item{y}{A string referencing the y-coordinate column.}
+\item{CoordRef}{A string referencing coordinate columns.}
 
 \item{ObjectTable}{Optional data.table with Objects.}
 
 \item{Unit}{A string indicating the speed unit (default = "px").}
 
 \item{ColourFlip}{A bool indicating the whether colour scheme should be inverted (default = TRUE).}
+
+\item{FacetRef}{A string as reference for facet wrap (for multi-view).}
 }
 \value{
 Returns a ggplot.
