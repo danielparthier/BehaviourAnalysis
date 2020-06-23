@@ -36,25 +36,25 @@ CustomColourPalette <- function(Mode = "dark", n = 5) {
 #' Plot Speed
 #'
 #' This function plots the speed of the object used as speed reference. When adding the x/y 
-#' references a 2D-plot is drawn using colour-coding for the speed. If the x/y inforamtion 
+#' references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 #' is omitted the speed will be plotted against time.
 #' @param DataTable A data.table used as input.
 #' @param Speed A string referencing the speed column.
-#' @param x A string referencing the x-coordinate column.
-#' @param y A string referencing the y-coordinate column.
+#' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param Unit A string indicating the speed unit (default = "px/s").
+#' @param FacetRef A string as reference for facet wrap (for multi-view).
 #'
 #' @return Returns a ggplot.
 #' @export
 SpeedPlot <- function(DataTable,
                       Speed,
-                      x = NULL,
-                      y = NULL,
+                      CoordRef = NULL,
                       ObjectTable = NULL,
-                      Unit = "px/s") {
+                      Unit = "px/s",
+                      FacetRef = NULL) {
   ObjectLoc <- NULL
-  if(is.null(x)&is.null(y)&is.character(Speed)) {
+  if(is.null(CoordRef)&is.character(Speed)) {
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = "Time", y = Speed))+
       ggplot2::geom_line()+
       ggplot2::scale_x_continuous(expand = c(0,0))+
@@ -63,8 +63,16 @@ SpeedPlot <- function(DataTable,
       ggplot2::xlab(label = "Time (s)")+
       ggplot2::theme_classic()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
-  } else if(is.character(x) & is.character(y) & is.character(Speed)) {
+  } else if(is.character(CoordRef) & is.character(Speed)) {
+    x <- paste0(CoordRef, "_x")
+    y <- paste0(CoordRef, "_y")
+    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+      stop("CoordRef missmatch")
+    }
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y, colour = Speed))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::scale_color_viridis_c()+
@@ -72,11 +80,17 @@ SpeedPlot <- function(DataTable,
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5)
     if(is.data.table(ObjectTable)) {
-      labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
+      labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
+      if(any(suppressWarnings(expr = is.na(as.integer(labels))))) {
+        labels <- ObjectTable[,ObjectLoc,]
+      }
         OutputPlot <- OutputPlot+
           ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y), shape = 21, colour = "black", alpha = 0.5, size = 8, stroke = 2)+
-          ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)
-      }
+          ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))
+    }
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
   } else {
     warning("Missing arguments")
@@ -89,23 +103,28 @@ SpeedPlot <- function(DataTable,
 #' references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 #' is omitted the speed will be plotted against time.
 #' @param DataTable A data.table used as input.
-#' @param x A string referencing the x-coordinate column.
-#' @param y A string referencing the y-coordinate column.
+#' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param Density A bool indicating whether the density should be plotted.
 #' @param BinNumber An integer indicating the number of bins for the density (default = 500).
+#' @param FacetRef A string as reference for facet wrap (for multi-view).
 #'
-#' @return Returns a ggplot2::ggplot.
+#' @return Returns a ggplot.
 #' @export
 LocationPlot <- function(DataTable,
-                         x = NULL,
-                         y = NULL,
+                         CoordRef = NULL,
                          ObjectTable = NULL,
                          Density = TRUE,
-                         BinNumber = 500) {
+                         BinNumber = 500,
+                         FacetRef = NULL) {
   ..density.. <- NULL
   ObjectLoc <- NULL
-  if(is.character(x) & is.character(y) & Density) {
+  if(is.character(CoordRef) & Density) {
+    x <- paste0(CoordRef, "_x")
+    y <- paste0(CoordRef, "_y")
+    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+      stop("CoordRef missmatch")
+    }
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y))+
       ggplot2::stat_density_2d(geom = "raster", ggplot2::aes(fill = ..density..),contour = FALSE, n = c(BinNumber, BinNumber))+
       ggplot2::scale_fill_viridis_c()+
@@ -113,22 +132,39 @@ LocationPlot <- function(DataTable,
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
-      labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
+      labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
+      if(any(suppressWarnings(expr = is.na(as.integer(labels))))) {
+        labels <- ObjectTable[,ObjectLoc,]
+      }
         OutputPlot <- OutputPlot+
         ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y), shape = 21, colour = "black", alpha = 0.5, size = 8, stroke = 2)+
-        ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)
+        ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))
+    }
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
     }
     return(OutputPlot)
-  } else if(is.character(x) & is.character(y) & !Density) {
+  } else if(is.character(CoordRef) & !Density) {
+    x <- paste0(CoordRef, "_x")
+    y <- paste0(CoordRef, "_y")
+    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+      stop("CoordRef missmatch")
+    }
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1, colour = "black")+
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
-      labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
+      labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
+      if(any(suppressWarnings(expr = is.na(as.integer(labels))))) {
+        labels <- ObjectTable[,ObjectLoc,]
+      }
         OutputPlot <- OutputPlot+
         ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y), shape = 21, colour = "black", alpha = 0.5, size = 8, stroke = 2)+
-        ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)
+        ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))
+    }
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
     }
     return(OutputPlot)
   } else {
@@ -143,27 +179,27 @@ LocationPlot <- function(DataTable,
 #' is omitted the distance will be plotted against time.
 #' @param DataTable A data.table used as input.
 #' @param Distance A string referencing the distance column.
-#' @param x A string referencing the x-coordinate column.
-#' @param y A string referencing the y-coordinate column.
+#' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param Unit A string indicating the speed unit (default = "px/s").
 #' @param ObjectDistance A bool indicating if reference is linked to stationary object(s) (default = FALSE).
-#'
+#' @param FacetRef A string as reference for facet wrap (for multi-view).
+#' 
 #' @return Returns a ggplot.
 #' @export
 DistancePlot <- function(DataTable,
                       Distance,
-                      x = NULL,
-                      y = NULL,
+                      CoordRef = NULL,
                       ObjectTable = NULL,
                       Unit = "px",
-                      ObjectDistance = F) {
+                      ObjectDistance = F,
+                      FacetRef = NULL) {
   ObjectLoc <- NULL
   variable <- NULL
   ObjectName <- NULL
   Time <- NULL
   value <- NULL
-  if(is.null(x) & is.null(y) & is.character(Distance) & !ObjectDistance) {
+  if(is.null(CoordRef) & is.character(Distance) & !ObjectDistance) {
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = "Time", y = Distance))+
       ggplot2::geom_line()+
       ggplot2::scale_x_continuous(expand = c(0,0))+
@@ -172,8 +208,16 @@ DistancePlot <- function(DataTable,
       ggplot2::xlab(label = "Time (s)")+
       ggplot2::theme_classic()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
-  } else if(is.character(x) & is.character(y) & is.character(Distance) & !ObjectDistance) {
+  } else if(is.character(CoordRef) & is.character(Distance) & !ObjectDistance) {
+    x <- paste0(CoordRef, "_x")
+    y <- paste0(CoordRef, "_y")
+    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+      stop("CoordRef missmatch")
+    }
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y, colour = Distance))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::scale_color_viridis_c()+
@@ -181,13 +225,19 @@ DistancePlot <- function(DataTable,
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
-      labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
+      labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
+      if(any(suppressWarnings(expr = is.na(as.integer(labels))))) {
+        labels <- ObjectTable[,ObjectLoc,]
+      }
       OutputPlot <- OutputPlot+
         ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y), shape = 21, colour = "black", alpha = 0.5, size = 8, stroke = 2)+
-        ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)
-    } 
+        ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))
+    }
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
-  } else if(is.null(x) & is.null(y) & is.character(Distance) & ObjectDistance & is.data.table(ObjectTable)) {
+  } else if(is.null(CoordRef) & is.character(Distance) & ObjectDistance & is.data.table(ObjectTable)) {
     ####################### work here
     tmpFrame <- melt(data = DataTable, id="Time", measure = paste(ObjectTable[,ObjectLoc], Distance,sep = "_"))
     for(i in ObjectTable[,ObjectLoc]) {
@@ -204,6 +254,9 @@ DistancePlot <- function(DataTable,
       ggplot2::xlab(label = "Time (s)")+
       ggplot2::theme_classic()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
   } else {
     warning("Missing arguments")
@@ -217,26 +270,34 @@ DistancePlot <- function(DataTable,
 #' is omitted the speed will be plotted against time.
 #' @param DataTable A data.table used as input.
 #' @param Angle A string referencing the angle.
-#' @param x A string referencing the x-coordinate column.
-#' @param y A string referencing the y-coordinate column.
+#' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param colourScheme A string indicating the colour scheme (default = "dark").
 #' @param ObjectHighlight A string indicating if the reference object should be highlighted (default = "alpha", other options: "colour", "stroke", "none" or colour valid string).
+#' @param FacetRef A string as reference for facet wrap (for multi-view).
 #'
-#' @return Returns a gggplot.
+#' @return Returns a ggplot.
 #' @export
 AnglePlot <- function(DataTable,
                       Angle,
-                      x = NULL,
-                      y = NULL,
+                      CoordRef = NULL,
                       ObjectTable = NULL,
                       colourScheme = "dark",
-                      ObjectHighlight = "alpha") {
+                      ObjectHighlight = "alpha",
+                      FacetRef = NULL) {
   Time <- NULL
   AngleVec <- NULL
   ObjectLoc <- NULL
-  if(is.null(x) & is.null(y) & is.character(Angle)) {
-    tmpFrame <- data.frame(AngleVec = DataTable[[Angle]]*180/pi, Time = DataTable[,Time])
+  if(is.null(CoordRef) & is.character(Angle)) {
+    tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi, Time = DataTable[,Time])
+    if(is.character(FacetRef)) {
+      if(sum(FacetRef==colnames(DataTable))==1) {
+        tmpFrame[, eval(FacetRef) := DataTable[,get(FacetRef)],,]
+      } else {
+        message("Incorrect FacetRef. FacetRef will be ignored.")
+      }
+      }
+    
     OutputPlot <- ggplot2::ggplot(data = tmpFrame, ggplot2::aes(x = Time, y = AngleVec))+
       ggplot2::geom_line()+
       ggplot2::scale_x_continuous(expand = c(0,0))+
@@ -245,9 +306,22 @@ AnglePlot <- function(DataTable,
       ggplot2::xlab(label = "Time (s)")+
       ggplot2::theme_classic()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
-  } else if(is.character(x) & is.character(y) & is.character(Angle)) {
-    tmpFrame <- data.frame(AngleVec = DataTable[[Angle]]*180/pi, x = DataTable[[x]], y = DataTable[[y]])
+  } else if(is.character(CoordRef) & is.character(Angle)) {
+    x <- paste0(CoordRef, "_x")
+    y <- paste0(CoordRef, "_y")
+    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+      stop("CoordRef missmatch")
+    }
+    if(is.null(FacetRef)) {
+      tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi, x = DataTable[[x]], y = DataTable[[y]])
+    } else {
+      tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi, x = DataTable[[x]], y = DataTable[[y]])
+      tmpFrame[, eval(FacetRef) := DataTable[,get(FacetRef)],,]
+    }
     OutputPlot <- ggplot2::ggplot(data = tmpFrame, ggplot2::aes(x = x, y = y, colour = AngleVec))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::labs(colour = "Angle\n(degrees)")+
@@ -255,13 +329,16 @@ AnglePlot <- function(DataTable,
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
-      labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
+      labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
+      if(any(suppressWarnings(expr = is.na(as.integer(labels))))) {
+        labels <- ObjectTable[,ObjectLoc,]
+      }
       targetObject <- sapply(ObjectTable[,ObjectLoc], function(x) { grepl(pattern = x, x = Angle)})
       if(any(grepl(ObjectHighlight, grDevices::colors()))) {
         chosenColour <- ObjectHighlight
-        ObjectHighlight <- "colourChoice"
+        ObjectHighlight <- "customChoice"
       }
-      if(!sum(grepl(pattern = ObjectHighlight, x = c("alpha", "colour", "stroke", "colourChoice", "none")))==1) {
+      if(!sum(grepl(pattern = ObjectHighlight, x = c("alpha", "colour", "stroke", "customChoice", "none"), fixed = TRUE))==1) {
         ObjectHighlight <- "alpha"
         message("No valid argument for 'ObjectHighlight'. Switch to default 'alpha'.")
       }
@@ -273,7 +350,7 @@ AnglePlot <- function(DataTable,
                      alpha = ifelse(targetObject, 0.9, 0.5),
                      size = 8,
                      stroke = 2)+
-          ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
+          ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
         "colour" = {OutputPlot <- OutputPlot+
           ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
                      shape = 21,
@@ -281,7 +358,7 @@ AnglePlot <- function(DataTable,
                      alpha = 0.7,
                      size = 8,
                      stroke = 2)+
-          ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
+          ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
         "stroke" = {OutputPlot <- OutputPlot+
           ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
                      shape = 21,
@@ -289,7 +366,7 @@ AnglePlot <- function(DataTable,
                      alpha = 0.5,
                      size = 8,
                      stroke = ifelse(targetObject, 3, 2))+
-          ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
+          ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
         "none" = {OutputPlot <- OutputPlot+
           ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
                      shape = 21,
@@ -297,17 +374,20 @@ AnglePlot <- function(DataTable,
                      alpha = 0.5,
                      size = 8,
                      stroke = 2)+
-          ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)},
-        "colourChoice" = {OutputPlot <- OutputPlot+
+          ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
+        "customChoice" = {OutputPlot <- OutputPlot+
           ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
                      shape = 21,
                      colour = ifelse(targetObject, chosenColour, "black"),
                      alpha = 0.7,
                      size = 8,
                      stroke = 2)+
-          ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)}
+          ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))}
       )
-      }
+    }
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
   } else {
     warning("Missing arguments")
@@ -322,22 +402,23 @@ AnglePlot <- function(DataTable,
 #' estimate rearing or other postures. 
 #' @param DataTable A data.table used as input.
 #' @param Length A string referencing the Length column.
-#' @param x A string referencing the x-coordinate column.
-#' @param y A string referencing the y-coordinate column.
+#' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param Unit A string indicating the speed unit (default = "px").
 #' @param ColourFlip A bool indicating the whether colour scheme should be inverted (default = TRUE).
+#' @param FacetRef A string as reference for facet wrap (for multi-view).
+#' 
 #' @return Returns a ggplot.
 #' @export
 LengthPlot <- function(DataTable,
                       Length,
-                      x = NULL,
-                      y = NULL,
+                      CoordRef = NULL,
                       ObjectTable = NULL,
                       Unit = "px",
-                      ColourFlip = T) {
+                      ColourFlip = T,
+                      FacetRef = NULL) {
   ObjectLoc <- NULL
-  if(is.null(x)&is.null(y)&is.character(Length)) {
+  if(is.null(CoordRef)&is.character(Length)) {
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = "Time", y = Length))+
       ggplot2::geom_line()+
       ggplot2::scale_x_continuous(expand = c(0,0))+
@@ -346,8 +427,16 @@ LengthPlot <- function(DataTable,
       ggplot2::xlab(label = "Time (s)")+
       ggplot2::theme_classic()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
+    }
     return(OutputPlot)
-  } else if(is.character(x) & is.character(y) & is.character(Length)) {
+  } else if(is.character(CoordRef) & is.character(Length)) {
+    x <- paste0(CoordRef, "_x")
+    y <- paste0(CoordRef, "_y")
+    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+      stop("CoordRef missmatch")
+    }
     OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y, colour = Length))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::scale_color_viridis_c(direction = ifelse(test = ColourFlip, yes = -1, no = 1))+
@@ -355,13 +444,81 @@ LengthPlot <- function(DataTable,
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
-      labels <- unlist(lapply(X = strsplit(ObjectTable[,ObjectLoc], split = "_"), FUN = function(x){x[2]}))
+      labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
+      if(any(suppressWarnings(expr = is.na(as.integer(labels))))) {
+        labels <- ObjectTable[,ObjectLoc,]
+      }
       OutputPlot <- OutputPlot+
         ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y), shape = 21, colour = "black", alpha = 0.5, size = 8, stroke = 2)+
-        ggplot2::annotate("text", x = ObjectTable[,x], y = ObjectTable[,y], label = labels)
+        ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))
+    }
+    if(is.character(FacetRef)) {
+      OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
     }
     return(OutputPlot)
   } else {
     warning("Missing arguments")
   }
+}
+
+### extend function to iwork for all plotting
+ObjectHighlighting <- function(ObjectTable, ObjectHighlight, OutputPlot){
+  ObjectLoc <- NULL
+  x <- NULL
+  y <- NULL
+  labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
+  if(any(suppressWarnings(expr = is.na(as.integer(labels))))) {
+    labels <- ObjectTable[,ObjectLoc,]
+  }
+  targetObject <- sapply(ObjectTable[,ObjectLoc], function(x) { grepl(pattern = x, x = Angle)})
+  if(any(grepl(ObjectHighlight, grDevices::colors()))) {
+    chosenColour <- ObjectHighlight
+    ObjectHighlight <- "customChoice"
+  }
+  if(!sum(grepl(pattern = ObjectHighlight, x = c("alpha", "colour", "stroke", "customChoice", "none"), fixed = TRUE))==1) {
+    ObjectHighlight <- "alpha"
+    message("No valid argument for 'ObjectHighlight'. Switch to default 'alpha'.")
+  }
+  switch (ObjectHighlight,
+          "alpha" = {OutputPlot <- OutputPlot+
+            ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
+                                shape = 21,
+                                colour = "black",
+                                alpha = ifelse(targetObject, 0.9, 0.5),
+                                size = 8,
+                                stroke = 2)+
+            ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
+          "colour" = {OutputPlot <- OutputPlot+
+            ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
+                                shape = 21,
+                                colour = ifelse(targetObject, "red", "black"),
+                                alpha = 0.7,
+                                size = 8,
+                                stroke = 2)+
+            ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
+          "stroke" = {OutputPlot <- OutputPlot+
+            ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
+                                shape = 21,
+                                colour = "black",
+                                alpha = 0.5,
+                                size = 8,
+                                stroke = ifelse(targetObject, 3, 2))+
+            ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
+          "none" = {OutputPlot <- OutputPlot+
+            ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
+                                shape = 21,
+                                colour = "black",
+                                alpha = 0.5,
+                                size = 8,
+                                stroke = 2)+
+            ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))},
+          "customChoice" = {OutputPlot <- OutputPlot+
+            ggplot2::geom_point(data = ObjectTable, ggplot2::aes(x = x, y = y),
+                                shape = 21,
+                                colour = ifelse(targetObject, chosenColour, "black"),
+                                alpha = 0.7,
+                                size = 8,
+                                stroke = 2)+
+            ggplot2::geom_text(data = ObjectTable, inherit.aes = F, ggplot2::aes(x = x, y = y, label = labels))}
+  )
 }
