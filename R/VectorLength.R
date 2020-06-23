@@ -14,7 +14,7 @@ VectorLength <- function(CoordTable,
                          VectorEnd,
                          OutputName,
                          Overwrite = TRUE) {
-  if(Overwrite) {
+  if(!Overwrite) {
     OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
   }
   # Vector length for two different columns
