@@ -13,7 +13,9 @@ License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.3),
     data.table (>= 1.12.8),
     ggplot2,
-    splines
+    splines,
+    shiny,
+    DT
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.1.0
 Encoding: UTF-8
