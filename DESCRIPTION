@@ -10,8 +10,7 @@ Description: This package reads data generated with DeepLabCut (Mathis et al. 20
     and allows analysis and visualisation of behavioural data. Labels can be easily structed and properties of objects 
     calculated over time.
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.3),
-    data.table (>= 1.12.8),
+Imports: data.table (>= 1.12.8),
     ggplot2,
     splines,
     shiny,
