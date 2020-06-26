@@ -1,4 +1,3 @@
-
 ui <- shiny::fluidPage(
   shiny::navbarPage(title = "Behaviour Analysis",id = "inTabset",
                     shiny::tabPanel(title = "Load Data", shiny::sidebarLayout(
@@ -65,9 +64,7 @@ ui <- shiny::fluidPage(
                                            choices = NULL,
                                            multiple = T),
                         shiny::actionButton(inputId = "deleteColumn",
-                                            label = "Delete Selection"),
-                        shiny::actionButton(inputId = "nextTabExport",
-                                            label = "Continue")
+                                            label = "Delete Selection")
                       ),
                       shiny::mainPanel(
                         DT::dataTableOutput("Table", width = 'auto')
@@ -86,8 +83,45 @@ ui <- shiny::fluidPage(
                         shiny::conditionalPanel(condition = "input.PlottingSelect.length > 0",
                                                 shiny::uiOutput(outputId = "PlotInput")),
                         shiny::actionButton(inputId = "startPlot",
-                                            label = "Plot")
-                        
+                                            label = "Plot"),
+                        shiny::fluidRow(
+                          shiny::column(width = 4,
+                                        shinyFiles::shinyDirButton(id = "dirPlot",
+                                                                   label = "Directory",
+                                                                   title = "Directory",
+                                                                   buttonType = "default"),
+                                        shiny::selectInput(inputId = "ExportFormat",
+                                                           label = "Format",
+                                                           choices = c("text", "pdf", "jpeg", "tiff", "png", "bmp", "svg", "wmf"),
+                                                           selected = "pdf",
+                                                           multiple = FALSE),
+                                        shiny::numericInput(inputId = "heightPlot",
+                                                            label = "Height",
+                                                            value = 4,
+                                                            min = 0,
+                                                            step = 0.1)
+                          ),
+                          shiny::column(width = 4,
+                                        shiny::actionButton(inputId = "savePlot",
+                                                            label = "Save Plot"),
+                                        shiny::numericInput(inputId = "dpi",
+                                                            label = "dpi",
+                                                            value = 72,
+                                                            min = 0,
+                                                            step = 50),
+                                        shiny::numericInput(inputId = "widthPlot",
+                                                            label = "Width",
+                                                            value = 4,
+                                                            min = 0,
+                                                            step = 0.1),
+                                        shiny::selectInput(inputId = "exportUnits",
+                                                           label = "Unit",
+                                                           choices = c("in", "cm", "mm", "tiff"),
+                                                           selected = "in",
+                                                           multiple = FALSE)
+                                        
+                          )
+                        )
                       ),
                       shiny::mainPanel(
                         shiny::plotOutput((outputId = "PlotOut")
@@ -97,7 +131,19 @@ ui <- shiny::fluidPage(
                     ),
                     shiny::tabPanel(title = "Export Data", shiny::sidebarLayout(
                       shiny::sidebarPanel(
-                        
+                        shinyFiles::shinyDirButton(id = "dir",
+                                                   label = "Directory",
+                                                   title = "Directory",
+                                                   buttonType = "default"),
+                        shiny::checkboxGroupInput(inputId = "OutputSelection",
+                                                  label = "Choose Output:",
+                                                  choices = NULL),
+                        shiny::selectInput(inputId = "FileType",
+                                           label = "File Type",
+                                           choices = c("csv", "rds (R)", "npy (Python)", "mat (Matlab)"),
+                                           multiple = F),
+                        shiny::actionButton(inputId = "SaveTables",
+                                            label = "Save Output")
                       ),
                       shiny::mainPanel(
                         
@@ -106,6 +152,7 @@ ui <- shiny::fluidPage(
                     )
   )
 )
+
 server <- function(input, output, session) {
   options(shiny.maxRequestSize=500*1024^2)
   BehaviourTable <- NULL
@@ -118,6 +165,8 @@ server <- function(input, output, session) {
   ObjectList <- NULL
   AllList <- NULL
   Time <- NULL
+  PlotUpdate <- FALSE
+  OutputPlot <- NULL
   
   # get files
   shiny::observeEvent(input$FileName, {
@@ -235,10 +284,10 @@ server <- function(input, output, session) {
             c(Type, Min, Mean, Max, NA_Count)})]
           DTSummary[,ColumnNames:=c("Type", "Min", "Mean", "Max", "NA Count"),]
           DT::datatable(data = dcast(melt(DTSummary, id.vars = "ColumnNames"), variable ~ ColumnNames),
-                    style = "bootstrap",
-                    escape = F,
-                    options = list(paging = TRUE,
-                                   pageLength = 25))
+                        style = "bootstrap",
+                        escape = F,
+                        options = list(paging = TRUE,
+                                       pageLength = 25))
         })
         shiny::updateTabsetPanel(session, "inTabset", selected = "Analyse Data")
         ColumnNamesSelect <- colnames(CoordList)
@@ -247,6 +296,8 @@ server <- function(input, output, session) {
                                  inputId = "DeleteSelection",
                                  label = "Select Variable",
                                  choices = ColumnNamesSelect)
+        TableSelection <- c("Coordinate Table", "Object Table", "Table with extra Parameters")[c(!is.null(CoordList), !is.null(ObjectList), !is.null(AllList))]
+        shiny::updateCheckboxGroupInput(session = session, inputId = "OutputSelection", label = "Choose Output", choices = TableSelection, selected = c("Coordinate Table", "Object Table"))
       })} else {
         shiny::showNotification(ui = "Missing Inputs", type = "error")
       }
@@ -286,11 +337,11 @@ server <- function(input, output, session) {
               })},
             "Angle Difference" = {
               AngleSelectionDiff <- na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                                     FUN = function(x){
-                                                                                       ifelse(test = is.numeric(x),
-                                                                                              yes = max(abs(x), na.rm = T)<=pi,
-                                                                                              no = FALSE)
-                                                                                     }),])])
+                                                                                         FUN = function(x){
+                                                                                           ifelse(test = is.numeric(x),
+                                                                                                  yes = max(abs(x), na.rm = T)<=pi,
+                                                                                                  no = FALSE)
+                                                                                         }),])])
               output$FunctionInput <- shiny::renderUI(expr = {list(
                 shiny::selectInput(inputId = "Angle1",
                                    label = "Select Angle 1",
@@ -354,20 +405,20 @@ server <- function(input, output, session) {
             "Zone Entry" = {
               DistanceRefSelection <- colnames(CoordList)[!grepl(x = colnames(CoordList), pattern = "_x|_y")]
               AngleSelectionZone <- na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                                     FUN = function(x){
-                                                                                       ifelse(test = is.numeric(x),
-                                                                                              yes = max(abs(x))<=pi,
-                                                                                              no = FALSE)
-                                                                                     }),])])
+                                                                                         FUN = function(x){
+                                                                                           ifelse(test = is.numeric(x),
+                                                                                                  yes = max(abs(x))<=pi,
+                                                                                                  no = FALSE)
+                                                                                         }),])])
               output$FunctionInput <- shiny::renderUI(expr = {list(
                 shiny::selectInput(inputId = "DistanceRef",
                                    label = "Select Distance Variable",
                                    choices = DistanceRefSelection,
                                    multiple = F),
-                radioButtons(inputId = "AngleInput",
-                             label = "Use Angle",
-                             choices = c("yes", "no"),
-                             selected = "yes"),
+                shiny::radioButtons(inputId = "AngleInput",
+                                    label = "Use Angle",
+                                    choices = c("yes", "no"),
+                                    selected = "yes"),
                 shiny::selectInput(inputId = "AngleRef",
                                    label = "Select pre computed Angle",
                                    choices = AngleSelectionZone,
@@ -478,10 +529,10 @@ server <- function(input, output, session) {
           c(Type, Min, Mean, Max, Na_Count)})]
         DTSummary[,ColumnNames:=c("Type", "Min", "Mean", "Max", "Na Count"),]
         DT::datatable(data = dcast(melt(DTSummary, id.vars = "ColumnNames"), variable ~ ColumnNames),
-                  style = "bootstrap",
-                  escape = F,
-                  options = list(paging = TRUE,
-                                 pageLength = 25))
+                      style = "bootstrap",
+                      escape = F,
+                      options = list(paging = TRUE,
+                                     pageLength = 25))
       })
       ColumnNamesSelect <- colnames(CoordList)
       ColumnNamesSelect <- unique(gsub(pattern = "_x|_y", replacement = "", x = ColumnNamesSelect[-grep(pattern = "frame|Time", x = ColumnNamesSelect)]))
@@ -525,10 +576,10 @@ server <- function(input, output, session) {
           c(Type, Min, Mean, Max, NA_Count)})]
         DTSummary[,ColumnNames:=c("Type", "Min", "Mean", "Max", "NA Count"),]
         DT::datatable(data = dcast(melt(DTSummary, id.vars = "ColumnNames"), variable ~ ColumnNames),
-                  style = "bootstrap",
-                  escape = F,
-                  options = list(paging = TRUE,
-                                 pageLength = 25))})
+                      style = "bootstrap",
+                      escape = F,
+                      options = list(paging = TRUE,
+                                     pageLength = 25))})
       ColumnNamesSelect <- colnames(CoordList)
       ColumnNamesSelect <- unique(gsub(pattern = "_x|_y", replacement = "", x = ColumnNamesSelect[-grep(pattern = "frame|Time", x = ColumnNamesSelect)]))
       shiny::updateSelectInput(session = session,
@@ -545,11 +596,11 @@ server <- function(input, output, session) {
     input$AnalyseTable
     input$nextTabAnalysis}, {
       AngleCheck <- na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                             FUN = function(x){
-                                                                               ifelse(test = is.numeric(x),
-                                                                                      yes = max(abs(x))<=pi,
-                                                                                      no = FALSE)
-                                                                             }),])])
+                                                                         FUN = function(x){
+                                                                           ifelse(test = is.numeric(x),
+                                                                                  yes = max(abs(x))<=pi,
+                                                                                  no = FALSE)
+                                                                         }),])])
       if(length(AngleCheck)==0) {
         PlotSelections <- c("Distance", "Length", "Location", "Speed")
       } else {
@@ -605,9 +656,9 @@ server <- function(input, output, session) {
                                    label = "Select Object (for 2D)",
                                    choices = CoordSelection,
                                    multiple = F),
-                radioButtons(inputId = "ColourScheme",
-                             label = "Colour Scheme",
-                             choices = c("dark", "light")),
+                shiny::radioButtons(inputId = "ColourScheme",
+                                    label = "Colour Scheme",
+                                    choices = c("dark", "light")),
                 shiny::selectInput(inputId = "ObjectHighlight",
                                    label = "Highlight Object",
                                    choices = c("alpha", "colour", "stroke", "none"),
@@ -649,10 +700,10 @@ server <- function(input, output, session) {
                 shiny::textInput(inputId = "Unit",
                                  label = "Unit",
                                  value = "px"),
-                radioButtons(inputId = "ColourFlip",
-                             label = "Reverse Colour Scheme",
-                             choices = c("yes", "no"),
-                             selected = "yes"))
+                shiny::radioButtons(inputId = "ColourFlip",
+                                    label = "Reverse Colour Scheme",
+                                    choices = c("yes", "no"),
+                                    selected = "yes"))
               })},
             "Location" = {
               CoordSelection <- c("",gsub(pattern = "_x",
@@ -663,10 +714,10 @@ server <- function(input, output, session) {
                                    label = "Select Object (for 2D)",
                                    choices = CoordSelection,
                                    multiple = F),
-                radioButtons(inputId = "Density",
-                             label = "Density Map",
-                             choices = c("yes", "no"),
-                             selected = "yes"),
+                shiny::radioButtons(inputId = "Density",
+                                    label = "Density Map",
+                                    choices = c("yes", "no"),
+                                    selected = "yes"),
                 shiny::numericInput(inputId = "BinNumber",
                                     label = "Number of Bins",
                                     value = 500,
@@ -703,31 +754,31 @@ server <- function(input, output, session) {
         CoordInput <- NULL 
       }
     }
-    Plotpdate <- F
+    PlotUpdate <<- F
     switch (input$PlottingSelect,
             "Angle" = {if(!is.null(input$FileChoices) &
                           !is.null(input$AngleChoice) &
                           !is.null(input$ColourScheme) &
                           !is.null(input$ObjectHighlight) &
                           !is.null(input$ObjectChoices)) {
-              OutputPlot <- AnglePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                      Angle = input$AngleChoice,
-                                      CoordRef = CoordInput,
-                                      ObjectTable = ObjectList[FileName %in% input$FileChoices,],
-                                      colourScheme = input$ColourScheme,
-                                      ObjectHighlight = input$ObjectHighlight,
-                                      FacetRef = "FileName")
-              Plotpdate <- T
+              OutputPlot <<- AnglePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                       Angle = input$AngleChoice,
+                                       CoordRef = CoordInput,
+                                       ObjectTable = ObjectList[FileName %in% input$FileChoices,],
+                                       colourScheme = input$ColourScheme,
+                                       ObjectHighlight = input$ObjectHighlight,
+                                       FacetRef = "FileName")
+              PlotUpdate <<- T
             } else if(!is.null(input$FileChoices) &
                       !is.null(input$AngleChoice) &
                       !is.null(input$ColourScheme) &
                       is.null(input$ObjectChoices)) {
-              OutputPlot <- AnglePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                      Angle = input$AngleChoice,
-                                      CoordRef = CoordInput,
-                                      colourScheme = input$ColourScheme,
-                                      FacetRef = "FileName")
-              Plotpdate <- T
+              OutputPlot <<- AnglePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                       Angle = input$AngleChoice,
+                                       CoordRef = CoordInput,
+                                       colourScheme = input$ColourScheme,
+                                       FacetRef = "FileName")
+              PlotUpdate <<- T
             } else { 
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }},
@@ -735,22 +786,23 @@ server <- function(input, output, session) {
                              !is.null(input$DistanceRef) &
                              !is.null(input$ObjectChoices) &
                              input$Unit!="") {
-              OutputPlot <- DistancePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                         Distance = input$DistanceRef,
-                                         CoordRef = CoordInput,
-                                         ObjectTable = ObjectList[FileName %in% input$FileChoices,],
-                                         Unit = input$Unit,
-                                         FacetRef = "FileName")
-              TableUpdate <- T
+              OutputPlot <<- DistancePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                          Distance = input$DistanceRef,
+                                          CoordRef = CoordInput,
+                                          ObjectTable = ObjectList[FileName %in% input$FileChoices,],
+                                          Unit = input$Unit,
+                                          FacetRef = "FileName")
+              PlotUpdate <<- T
             } else if(!is.null(input$FileChoices) &
                       !is.null(input$DistanceRef) &
                       is.null(input$ObjectChoices) &
                       input$Unit!="") { 
-              OutputPlot <- DistancePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                         Distance = input$DistanceRef,
-                                         CoordRef = CoordInput,
-                                         Unit = input$Unit,
-                                         FacetRef = "FileName")
+              OutputPlot <<- DistancePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                          Distance = input$DistanceRef,
+                                          CoordRef = CoordInput,
+                                          Unit = input$Unit,
+                                          FacetRef = "FileName")
+              PlotUpdate <<- T
             } else {
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }},
@@ -759,46 +811,48 @@ server <- function(input, output, session) {
                            !is.null(input$ObjectChoices) &
                            input$Unit!="" &
                            !is.null(input$ColourFlip)) {
-              OutputPlot <- LengthPlot(DataTable = CoordList[(FileName %in% input$FileChoices) & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                       Length = input$LengthRef,
-                                       CoordRef = CoordInput,
-                                       ObjectTable = ObjectList[FileName %in% input$FileChoices,],
-                                       Unit = input$Unit,
-                                       ColourFlip = ifelse(input$ColourFlip=="yes", TRUE, FALSE),
-                                       FacetRef = "FileName")
-              PlotUpdate <- T
+              OutputPlot <<- LengthPlot(DataTable = CoordList[(FileName %in% input$FileChoices) & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                        Length = input$LengthRef,
+                                        CoordRef = CoordInput,
+                                        ObjectTable = ObjectList[FileName %in% input$FileChoices,],
+                                        Unit = input$Unit,
+                                        ColourFlip = ifelse(input$ColourFlip=="yes", TRUE, FALSE),
+                                        FacetRef = "FileName")
+              PlotUpdate <<- T
             } else if(!is.null(input$FileChoices) &
                       !is.null(input$LengthRef) &
                       is.null(input$ObjectChoices) &
                       input$Unit!="" &
                       !is.null(input$ColourFlip)) { 
-              OutputPlot <- LengthPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                       Length = input$LengthRef,
-                                       CoordRef = CoordInput,
-                                       Unit = input$Unit,
-                                       ColourFlip = ifelse(input$ColourFlip=="yes", TRUE, FALSE),
-                                       FacetRef = "FileName")
+              OutputPlot <<- LengthPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                        Length = input$LengthRef,
+                                        CoordRef = CoordInput,
+                                        Unit = input$Unit,
+                                        ColourFlip = ifelse(input$ColourFlip=="yes", TRUE, FALSE),
+                                        FacetRef = "FileName")
+              PlotUpdate <<- T
             } else {
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }},
             "Location" = {if(!is.null(input$FileChoices) &
                              !is.null(input$ObjectChoices) &
-                             is.null(CoordInput)) {
-              OutputPlot <- LocationPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                         CoordRef = CoordInput,
-                                         ObjectTable = ObjectList[FileName %in% input$FileChoices,],
-                                         Density = ifelse(input$Density=="yes", TRUE, FALSE),
-                                         BinNumber = input$BinNumber,
-                                         FacetRef = "FileName")
-              PlotUpdate <- T
+                             !is.null(CoordInput)) {
+              OutputPlot <<- LocationPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                          CoordRef = CoordInput,
+                                          ObjectTable = ObjectList[FileName %in% input$FileChoices,],
+                                          Density = ifelse(input$Density=="yes", TRUE, FALSE),
+                                          BinNumber = input$BinNumber,
+                                          FacetRef = "FileName")
+              PlotUpdate <<- T
             } else if(!is.null(input$FileChoices) &
                       is.null(input$ObjectChoices) &
                       !is.null(CoordInput)) { 
-              OutputPlot <- LocationPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                         CoordRef = CoordInput,
-                                         Density = ifelse(input$Density=="yes", TRUE, FALSE),
-                                         BinNumber = input$BinNumber,
-                                         FacetRef = "FileName")
+              OutputPlot <<- LocationPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                          CoordRef = CoordInput,
+                                          Density = ifelse(input$Density=="yes", TRUE, FALSE),
+                                          BinNumber = input$BinNumber,
+                                          FacetRef = "FileName")
+              PlotUpdate <<- T
             } else {
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }},
@@ -806,25 +860,130 @@ server <- function(input, output, session) {
                           !is.null(input$SpeedRefCalc) &
                           !is.null(input$ObjectChoices) &
                           input$Unit!="") {
-              OutputPlot <- SpeedPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                      Speed = input$SpeedRefCalc,
-                                      CoordRef = CoordInput,
-                                      ObjectTable = ObjectList[FileName %in% input$FileChoices,],
-                                      Unit = input$Unit,FacetRef = "FileName")
-              PlotUpdate <- T
+              OutputPlot <<- SpeedPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                       Speed = input$SpeedRefCalc,
+                                       CoordRef = CoordInput,
+                                       ObjectTable = ObjectList[FileName %in% input$FileChoices,],
+                                       Unit = input$Unit,FacetRef = "FileName")
+              PlotUpdate <<- T
             } else if(!!is.null(input$FileChoices) &
                       !is.null(input$SpeedRefCalc) &
                       is.null(input$ObjectChoices) &
                       input$Unit!="") { 
-              OutputPlot <- SpeedPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
-                                      Speed = input$SpeedRefCalc,
-                                      CoordRef = CoordInput,
-                                      ObjectTable = ObjectList[FileName %in% input$FileChoices,],
-                                      Unit = input$Unit,FacetRef = "FileName")
+              OutputPlot <<- SpeedPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+                                       Speed = input$SpeedRefCalc,
+                                       CoordRef = CoordInput,
+                                       ObjectTable = ObjectList[FileName %in% input$FileChoices,],
+                                       Unit = input$Unit,FacetRef = "FileName")
+              PlotUpdate <<- T
             } else {
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }})
-    output$PlotOut <- shiny::renderPlot(OutputPlot)
+    if(PlotUpdate) {
+      output$PlotOut <- shiny::renderPlot(OutputPlot)
+    }
+  })
+  
+  
+  shinyFiles::shinyDirChoose(
+    input,
+    'dirPlot',
+    roots = c(home = "~"),
+    filetypes = c("text", "pdf", "jpeg", "tiff", "png", "bmp", "svg", "wmf")
+  )
+  
+  globalP <- reactiveValues(plotpath = "~")
+  
+  dirPlot <- reactive(input$dirPlot)
+  
+  output$dirPlot <- renderText({
+    globalP$plotpath
+  })
+  
+  observeEvent(ignoreNULL = TRUE,
+               eventExpr = {
+                 input$dirPlot
+               },
+               handlerExpr = {
+                 if (!"path" %in% names(dirPlot())) return()
+                 home <- normalizePath("~")
+                 globalP$plotpath <-
+                   file.path(home, paste(unlist(dirPlot()$path[-1]), collapse = .Platform$file.sep))
+               })
+  
+  observeEvent(input$savePlot, {
+    if(!is.null(OutputPlot) & PlotUpdate) {
+      ggplot2::ggsave(filename = paste(globalP$plotpath, paste0(input$PlottingSelect,"_", input$CoordSelection, ".",input$ExportFormat), sep = .Platform$file.sep),
+                      plot = OutputPlot,
+                      device = input$ExportFormat,
+                      width = input$widthPlot,
+                      height = input$heightPlot,
+                      units = input$exportUnits,
+                      dpi = input$dpi)
+      shiny::showNotification(ui = paste(paste(globalP$plotpath, paste0(input$PlottingSelect,"_", input$CoordSelection, ".",input$ExportFormat), "Saved to")), type = "message")
+    }
+  })
+  
+  shinyFiles::shinyDirChoose(
+    input,
+    'dir',
+    roots = c(home = "~"),
+    filetypes = c("xls", "txt", "csv", "tsv", "mat", "rds", "rda","pdf", "png", "svg", "eps")
+  )
+  
+  global <- reactiveValues(datapath = "~")
+  
+  dir <- reactive(input$dir)
+  
+  output$dir <- renderText({
+    global$datapath
+  })
+  
+  observeEvent(ignoreNULL = TRUE,
+               eventExpr = {
+                 input$dir
+               },
+               handlerExpr = {
+                 if (!"path" %in% names(dir())) return()
+                 home <- normalizePath("~")
+                 global$datapath <-
+                   file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
+               })
+  
+  observeEvent(input$SaveTables, {
+    if(length(input$OutputSelection)>0 & nchar(input$FileType)>0) {
+      FileFrame <- data.frame(data=c("CoordList", "ObjectList", "AllList"),
+                              FileOut=paste(global$datapath, c("CoordList", "ObjectList", "AllList"), sep = .Platform$file.sep),
+                              StringLabel=c("Coordinate Table", "Object Table", "Table with extra Parameters"))
+      FileFrame <- FileFrame[FileFrame$StringLabel %in% input$OutputSelection,c(1:2)]
+      switch (input$FileType,
+              "csv" = {
+                for(i in seq_along(FileFrame$data)) {
+                  data.table::fwrite(x = get(FileFrame$data[i]), file = paste0(FileFrame$FileOut[i], ".csv"))
+                }
+              },
+              "rds (R)" = {
+                for(i in seq_along(FileFrame$data)) {
+                  saveRDS(object = get(FileFrame$data[i]), file = paste0(FileFrame$FileOut[i], ".rds"))
+                }
+              },
+              "npy (Python)" = {
+                shiny::showNotification(ui = "npy is currently not supported", type = "message")
+                #for(i in seq_along(FileFrame$data)) {
+                #  RcppCNPy::npySave(object = get(FileFrame$data[i]), filename = paste0(FileFrame$FileOut[i], ".npy"))
+                #}
+              },
+              "mat (Matlab)" = {
+                shiny::showNotification(ui = "npy is currently not supported", type = "message")
+                #for(i in seq_along(FileFrame$data)) {
+                #  R.matlab::writeMat(paste0(FileFrame$FileOut[i], ".mat"), get(FileFrame$data[i]))
+                #}
+              }
+      )
+    } else {
+      shiny::showNotification(ui = "Missing Inputs", type = "error")
+    }
+    
   })
 }
 
@@ -832,5 +991,4 @@ server <- function(input, output, session) {
 #'
 #' This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing and plotting data.
 #' @export
-StartApp <- function() {shinyApp(ui = ui, server = server)}
-
+StartApp <- function() {shiny::shinyApp(ui = ui, server = server)}
