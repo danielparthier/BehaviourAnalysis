@@ -7,5 +7,5 @@
 StartApp()
 }
 \description{
-This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing and plotting data.
+This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing, plotting, and exporting data.
 }
