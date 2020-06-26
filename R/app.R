@@ -172,7 +172,7 @@ server <- function(input, output, session) {
   shiny::observeEvent(input$FileName, {
     FileList <<- input$FileName
     variableNameList <<- lapply(input$FileName$datapath, function(i) {
-      read.csv(file =  i, nrows = 1)[read.csv(file =  i, nrows = 2)[2,]=="likelihood"]
+      utils::read.csv(file =  i, nrows = 1)[utils::read.csv(file =  i, nrows = 2)[2,]=="likelihood"]
     })
     uniquevariables <<- unlist(unique(variableNameList))
     InFileLabels <<- uniquevariables[apply(sapply(X = variableNameList, function(x){uniquevariables%in%x}), 1, all)]
@@ -236,7 +236,7 @@ server <- function(input, output, session) {
           if(IncAll) {
             BehaviourTable[[i]][[3]][,FileName:=FileList$name[i],]
           }
-          incProgress(amount = 1/length(BehaviourTable), detail = FileList$name[i])
+          shiny::incProgress(amount = 1/length(BehaviourTable), detail = FileList$name[i])
         }
         CoordList <<- data.table::rbindlist(lapply(X = seq_along(BehaviourTable), FUN = function(i){
           BehaviourTable[[i]][[1]]
@@ -319,7 +319,7 @@ server <- function(input, output, session) {
                                  placeholder = "type in variable name"))
               })},
             "Angle Calculation" = {
-              AngleSelection <- na.omit(gsub(pattern = "_x",
+              AngleSelection <- stats::na.omit(gsub(pattern = "_x",
                                              replacement = "",
                                              x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))]))
               output$FunctionInput <- shiny::renderUI(expr = {list(
@@ -336,7 +336,7 @@ server <- function(input, output, session) {
                                  placeholder = "type in variable name"))
               })},
             "Angle Difference" = {
-              AngleSelectionDiff <- na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
+              AngleSelectionDiff <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
                                                                                          FUN = function(x){
                                                                                            ifelse(test = is.numeric(x),
                                                                                                   yes = max(abs(x), na.rm = T)<=pi,
@@ -404,7 +404,7 @@ server <- function(input, output, session) {
               })},
             "Zone Entry" = {
               DistanceRefSelection <- colnames(CoordList)[!grepl(x = colnames(CoordList), pattern = "_x|_y")]
-              AngleSelectionZone <- na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
+              AngleSelectionZone <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
                                                                                          FUN = function(x){
                                                                                            ifelse(test = is.numeric(x),
                                                                                                   yes = max(abs(x))<=pi,
@@ -595,7 +595,7 @@ server <- function(input, output, session) {
     input$nextTabPlotting
     input$AnalyseTable
     input$nextTabAnalysis}, {
-      AngleCheck <- na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
+      AngleCheck <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
                                                                          FUN = function(x){
                                                                            ifelse(test = is.numeric(x),
                                                                                   yes = max(abs(x))<=pi,
@@ -609,7 +609,7 @@ server <- function(input, output, session) {
       output$PlottingFunctions <- shiny::renderUI(expr = {list(shiny::selectInput(inputId = "PlottingSelect",
                                                                                   label = "Select Plot",
                                                                                   choices = PlotSelections),
-                                                               sliderInput("range", 
+                                                              shiny::sliderInput("range", 
                                                                            label = "Time Range:",
                                                                            min = floor(CoordList[,min(Time),]),
                                                                            max = ceiling(CoordList[,max(Time),]),
@@ -623,7 +623,7 @@ server <- function(input, output, session) {
     })
   
   shiny::observeEvent(input$FileChoices,{
-    updateSliderInput(session = session,
+    shiny::updateSliderInput(session = session,
                       inputId = "range",
                       label = "Time Range:",
                       min = floor(CoordList[FileName %in% input$FileChoices,min(Time),]),
@@ -638,7 +638,7 @@ server <- function(input, output, session) {
   }, {
     switch (input$PlottingSelect,
             "Angle" = {
-              AngleSelection <- na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
+              AngleSelection <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
                                                                                      FUN = function(x){
                                                                                        ifelse(test = is.numeric(x),
                                                                                               yes = max(abs(x))<=pi,
@@ -892,15 +892,15 @@ server <- function(input, output, session) {
     filetypes = c("text", "pdf", "jpeg", "tiff", "png", "bmp", "svg", "wmf")
   )
   
-  globalP <- reactiveValues(plotpath = "~")
+  globalP <- shiny::reactiveValues(plotpath = "~")
   
-  dirPlot <- reactive(input$dirPlot)
+  dirPlot <- shiny::reactive(input$dirPlot)
   
-  output$dirPlot <- renderText({
+  output$dirPlot <- shiny::renderText({
     globalP$plotpath
   })
   
-  observeEvent(ignoreNULL = TRUE,
+  shiny::observeEvent(ignoreNULL = TRUE,
                eventExpr = {
                  input$dirPlot
                },
@@ -911,7 +911,7 @@ server <- function(input, output, session) {
                    file.path(home, paste(unlist(dirPlot()$path[-1]), collapse = .Platform$file.sep))
                })
   
-  observeEvent(input$savePlot, {
+  shiny::observeEvent(input$savePlot, {
     if(!is.null(OutputPlot) & PlotUpdate) {
       ggplot2::ggsave(filename = paste(globalP$plotpath, paste0(input$PlottingSelect,"_", input$CoordSelection, ".",input$ExportFormat), sep = .Platform$file.sep),
                       plot = OutputPlot,
@@ -931,15 +931,15 @@ server <- function(input, output, session) {
     filetypes = c("xls", "txt", "csv", "tsv", "mat", "rds", "rda","pdf", "png", "svg", "eps")
   )
   
-  global <- reactiveValues(datapath = "~")
+  global <- shiny::reactiveValues(datapath = "~")
   
-  dir <- reactive(input$dir)
+  dir <- shiny::reactive(input$dir)
   
-  output$dir <- renderText({
+  output$dir <- shiny::renderText({
     global$datapath
   })
   
-  observeEvent(ignoreNULL = TRUE,
+  shiny::observeEvent(ignoreNULL = TRUE,
                eventExpr = {
                  input$dir
                },
@@ -950,7 +950,7 @@ server <- function(input, output, session) {
                    file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
                })
   
-  observeEvent(input$SaveTables, {
+  shiny::observeEvent(input$SaveTables, {
     if(length(input$OutputSelection)>0 & nchar(input$FileType)>0) {
       FileFrame <- data.frame(data=c("CoordList", "ObjectList", "AllList"),
                               FileOut=paste(global$datapath, c("CoordList", "ObjectList", "AllList"), sep = .Platform$file.sep),
@@ -989,6 +989,6 @@ server <- function(input, output, session) {
 
 #' Start Analysis Application
 #'
-#' This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing and plotting data.
+#' This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing, plotting, and exporting data.
 #' @export
 StartApp <- function() {shiny::shinyApp(ui = ui, server = server)}
