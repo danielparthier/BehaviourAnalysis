@@ -3,7 +3,9 @@
 #' This function checks for duplicates of columns.
 #' @param DataTable A table including coordinates of labels.
 #' @param NameString A string indicating the label used for object distance.
-#'
+#' @importFrom stats na.omit
+#' @importFrom utils read.csv
+#' 
 #' @return Modifies existing DataTable.
 #' @export
 VariableNameCheck <- function(DataTable,
