@@ -17,6 +17,5 @@ Imports: Rcpp (>= 1.0.3),
     shiny,
     shinyFiles,
     DT
-LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.1.0
 Encoding: UTF-8
