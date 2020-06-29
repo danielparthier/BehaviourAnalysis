@@ -92,8 +92,8 @@ ObjectAngle <- function(CoordTable,
           get(ReferenceColumn)==j,"tmp_y" := objY,]
       }
       AngleCalc(CoordTable = CoordTable,
-                VectorStart = Ref,
-                VectorEnd = "tmp",
+                VectorStart1 = Ref,
+                VectorEnd1 = "tmp",
                 OutputName = AngleName)
     } else {
       objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
