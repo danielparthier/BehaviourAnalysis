@@ -30,7 +30,7 @@ ZoneEntry(
 \item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
-Modifies existing DataTable.
+Modifies existing DataTable and add the binary output for an entry, .
 }
 \description{
 This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.

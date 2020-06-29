@@ -15,7 +15,7 @@ AngleDiff(CoordTable, Angle1, Angle2, OutputName, Overwrite = TRUE)
 
 \item{OutputName}{A string indicating for the output angle difference.}
 
-\item{Overwrite}{A bool indicating if ouput should be overwritten if it exists already (default = TRUE).}
+\item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
 Modifies existing DataTable.

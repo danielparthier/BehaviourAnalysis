@@ -24,7 +24,7 @@ ObjectDistance(
 \item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
-Modifies existing DataTable.
+Modifies existing DataTable to add the object distance.
 }
 \description{
 This function calculates the distance from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
