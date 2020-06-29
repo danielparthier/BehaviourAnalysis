@@ -288,24 +288,32 @@ AnglePlot <- function(DataTable,
   Time <- NULL
   AngleVec <- NULL
   ObjectLoc <- NULL
+  AngleShift <- NULL
   if(is.null(CoordRef) & is.character(Angle)) {
-    tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi, Time = DataTable[,Time])
+    tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi,Time = DataTable[,Time])
     if(is.character(FacetRef)) {
       if(sum(FacetRef==colnames(DataTable))==1) {
         tmpFrame[, eval(FacetRef) := DataTable[,get(FacetRef)],,]
+        tmpFrame[,AngleShift:=data.table::shift(AngleVec, n = -1),by=eval(FacetRef)]
+        tmpFrame[,ColCut:=abs(AngleVec-AngleShift)<270,][is.na(ColCut), ColCut:=TRUE,]
+        tmpFrame[,AngleShift:=NULL,][,ColCut:=as.integer(ColCut),]
       } else {
         message("Incorrect FacetRef. FacetRef will be ignored.")
       }
-      }
+    } else {
+      tmpFrame[,ColCut:=abs(AngleVec-data.table::shift(AngleVec, n = -1))<270,]
+      tmpFrame[is.na(ColCut), ColCut:=TRUE,][,ColCut:=as.integer(ColCut),]
+    }
     
-    OutputPlot <- ggplot2::ggplot(data = tmpFrame, ggplot2::aes(x = Time, y = AngleVec))+
+    OutputPlot <- ggplot2::ggplot(data = tmpFrame, ggplot2::aes(x = Time, y = AngleVec, alpha = ColCut))+
       ggplot2::geom_line()+
+      ggplot2::scale_alpha(range = c(0,1))+
       ggplot2::scale_x_continuous(expand = c(0,0))+
       ggplot2::scale_y_continuous(expand = c(0,0), limits = c(-180,180), breaks = c(-180, -90, 0, 90, 180))+
       ggplot2::ylab(label = "Angle (degrees)")+
       ggplot2::xlab(label = "Time (s)")+
       ggplot2::theme_classic()+
-      ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
+      ggplot2::theme(legend.position = "none", plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.character(FacetRef)) {
       OutputPlot <- OutputPlot+ggplot2::facet_wrap(facets = FacetRef)
     }
@@ -461,7 +469,7 @@ LengthPlot <- function(DataTable,
   }
 }
 
-### extend function to iwork for all plotting
+### extend function to work for all plotting
 ObjectHighlighting <- function(ObjectTable, ObjectHighlight, OutputPlot){
   ObjectLoc <- NULL
   x <- NULL
