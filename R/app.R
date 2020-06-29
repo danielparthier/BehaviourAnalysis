@@ -54,6 +54,8 @@ ui <- shiny::fluidPage(
                         shiny::helpText("Choose a function you want to apply and fill in the variables. Possible choices will be offered once you decide for a function type."),
                         shiny::uiOutput(outputId = "UserFunctions"),
                         shiny::conditionalPanel(condition = "input.FunctionSelect.length > 0",
+                                                shiny::uiOutput(outputId = "FunctionExplanation")),
+                        shiny::conditionalPanel(condition = "input.FunctionSelect.length > 0",
                                                 shiny::uiOutput(outputId = "FunctionInput")),
                         shiny::actionButton(inputId = "AnalyseTable",
                                             label = "Analyse"),
@@ -80,6 +82,8 @@ ui <- shiny::fluidPage(
                                            multiple = T,
                                            selectize = FALSE),
                         shiny::uiOutput(outputId = "PlottingFunctions"),
+                        shiny::conditionalPanel(condition = "input.PlottingSelect.length > 0",
+                                                shiny::uiOutput(outputId = "Plotxplanation")),
                         shiny::conditionalPanel(condition = "input.PlottingSelect.length > 0",
                                                 shiny::uiOutput(outputId = "PlotInput")),
                         shiny::actionButton(inputId = "startPlot",
@@ -304,133 +308,159 @@ server <- function(input, output, session) {
   })
   
   shiny::observeEvent(input$FunctionSelect, {
-    switch (input$FunctionSelect,
-            "Add Centroid" = {
-              CornerSelection <- gsub(pattern = "_x",
-                                      replacement = "",
-                                      x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))])
-              output$FunctionInput <- shiny::renderUI(expr = {list(
-                shiny::selectInput(inputId = "CornerNames",
-                                   label = "Select Corner Variables",
-                                   choices = CornerSelection,
-                                   multiple = T),
-                shiny::textInput(inputId = "OutputName",
-                                 label = "Output Name",
-                                 placeholder = "type in variable name"))
-              })},
-            "Angle Calculation" = {
-              AngleSelection <- stats::na.omit(gsub(pattern = "_x",
+    switch(input$FunctionSelect,
+           "Add Centroid" = {
+             CornerSelection <- gsub(pattern = "_x",
+                                     replacement = "",
+                                     x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))])
+             output$FunctionInput <- shiny::renderUI(expr = {list(
+               shiny::selectInput(inputId = "CornerNames",
+                                  label = "Select Corner Variables",
+                                  choices = CornerSelection,
+                                  multiple = T),
+               shiny::textInput(inputId = "OutputName",
+                                label = "Output Name",
+                                placeholder = "type in variable name"))
+             })
+             output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("To calculate the centroid (midpoint) of 2 or more points fill in the names of points. Choose the new variable name assigned to the calculated centroid.")})},
+           "Angle Calculation" = {
+             AngleSelection <- stats::na.omit(gsub(pattern = "_x",
+                                                   replacement = "",
+                                                   x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))]))
+             output$FunctionInput <- shiny::renderUI(expr = {list(
+               shiny::selectInput(inputId = "VectorStart1",
+                                  label = "Select Vector1 Start",
+                                  choices = AngleSelection,
+                                  multiple = F),
+               shiny::selectInput(inputId = "VectorEnd1",
+                                  label = "Select Vector1 End",
+                                  choices = AngleSelection,
+                                  multiple = F),
+               shiny::selectInput(inputId = "VectorStart2",
+                                  label = "Select Vector2 Start",
+                                  choices = AngleSelection,
+                                  multiple = F),
+               shiny::selectInput(inputId = "VectorEnd2",
+                                  label = "Select Vector2 End",
+                                  choices = AngleSelection,
+                                  multiple = F),
+               shiny::textInput(inputId = "OutputName",
+                                label = "Output Name",
+                                placeholder = "type in variable name"))
+             })
+             output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("To calculate the angle between two vectors choose the start and end of both vectors. If only one vector is provided the angle to the reference system (0,0) will be computed. The output of the function will be between -pi and pi")})
+             },
+             "Angle Difference" = {
+               AngleSelectionDiff <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
+                                                                                                 FUN = function(x){
+                                                                                                   ifelse(test = is.numeric(x),
+                                                                                                          yes = max(abs(x), na.rm = T)<=pi,
+                                                                                                          no = FALSE)
+                                                                                                 }),])])
+               output$FunctionInput <- shiny::renderUI(expr = {list(
+                 shiny::selectInput(inputId = "Angle1",
+                                    label = "Select Angle 1",
+                                    choices = AngleSelectionDiff,
+                                    multiple = F),
+                 shiny::selectInput(inputId = "Angle2",
+                                    label = "Select Angle 2",
+                                    choices = AngleSelectionDiff,
+                                    multiple = F),
+                 shiny::textInput(inputId = "OutputName",
+                                  label = "Output Name",
+                                  placeholder = "type in variable name"))
+               })
+               output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("To calculate the difference between two angles choose the angles as input. The output will be the corrected angle in radians between -pi and pi")})
+               },
+             "Distance and Speed" = {
+               SpeedSelection <- unique(gsub(pattern = "_x|_y",
                                              replacement = "",
-                                             x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))]))
-              output$FunctionInput <- shiny::renderUI(expr = {list(
-                shiny::selectInput(inputId = "VectorStart",
-                                   label = "Select Vector Start",
-                                   choices = AngleSelection,
-                                   multiple = F),
-                shiny::selectInput(inputId = "VectorEnd",
-                                   label = "Select Vector End",
-                                   choices = AngleSelection,
-                                   multiple = F),
-                shiny::textInput(inputId = "OutputName",
-                                 label = "Output Name",
-                                 placeholder = "type in variable name"))
-              })},
-            "Angle Difference" = {
-              AngleSelectionDiff <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                                         FUN = function(x){
-                                                                                           ifelse(test = is.numeric(x),
-                                                                                                  yes = max(abs(x), na.rm = T)<=pi,
-                                                                                                  no = FALSE)
-                                                                                         }),])])
-              output$FunctionInput <- shiny::renderUI(expr = {list(
-                shiny::selectInput(inputId = "Angle1",
-                                   label = "Select Angle 1",
-                                   choices = AngleSelectionDiff,
-                                   multiple = F),
-                shiny::selectInput(inputId = "Angle2",
-                                   label = "Select Angle 2",
-                                   choices = AngleSelectionDiff,
-                                   multiple = F),
-                shiny::textInput(inputId = "OutputName",
-                                 label = "Output Name",
-                                 placeholder = "type in variable name"))
-              })},
-            "Distance and Speed" = {
-              SpeedSelection <- unique(gsub(pattern = "_x|_y",
-                                            replacement = "",
-                                            x = colnames(CoordList)[grepl(x = colnames(CoordList), pattern = "_x|_y")]))
-              output$FunctionInput <- shiny::renderUI(expr = {
-                shiny::selectInput(inputId = "SpeedRef",
-                                   label = "Select Variable",
-                                   choices = SpeedSelection,
-                                   multiple = F)
-              })},
-            "Object Distance" = {
-              RefSelection <- unique(gsub(pattern = "_x|_y",
-                                          replacement = "",
-                                          x = colnames(CoordList)[grepl(x = colnames(CoordList), pattern = "_x|_y")]))
-              output$FunctionInput <- shiny::renderUI(expr = {
-                shiny::selectInput(inputId = "Ref",
-                                   label = "Select Reference Variable",
-                                   choices = RefSelection,
-                                   multiple = F)
-              })},
-            "Object Angle" = {
-              RefSelection <- unique(gsub(pattern = "_x|_y",
-                                          replacement = "",
-                                          x = colnames(CoordList)[grepl(x = colnames(CoordList), pattern = "_x|_y")]))
-              output$FunctionInput <- shiny::renderUI(expr = {
-                shiny::selectInput(inputId = "Ref",
-                                   label = "Select Reference Variable",
-                                   choices = RefSelection,
-                                   multiple = F)
-              })},
-            "Vector Length" = {
-              LengthSelection <- unique(gsub(pattern = "_x|_y",
-                                             replacement = "",
-                                             x = colnames(CoordList)[grepl(pattern = "_x|_y", x = colnames(CoordList))]))
-              output$FunctionInput <- shiny::renderUI(expr = {list(
-                shiny::selectInput(inputId = "VectorStart",
-                                   label = "Select Vector Start",
-                                   choices = LengthSelection,
-                                   multiple = F),
-                shiny::selectInput(inputId = "VectorEnd",
-                                   label = "Select Vector End",
-                                   choices = LengthSelection,
-                                   multiple = F),
-                shiny::textInput(inputId = "OutputName",
-                                 label = "Output Name",
-                                 placeholder = "type in variable name"))
-              })},
-            "Zone Entry" = {
-              DistanceRefSelection <- colnames(CoordList)[!grepl(x = colnames(CoordList), pattern = "_x|_y")]
-              AngleSelectionZone <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                                         FUN = function(x){
-                                                                                           ifelse(test = is.numeric(x),
-                                                                                                  yes = max(abs(x))<=pi,
-                                                                                                  no = FALSE)
-                                                                                         }),])])
-              output$FunctionInput <- shiny::renderUI(expr = {list(
-                shiny::selectInput(inputId = "DistanceRef",
-                                   label = "Select Distance Variable",
-                                   choices = DistanceRefSelection,
-                                   multiple = F),
-                shiny::radioButtons(inputId = "AngleInput",
-                                    label = "Use Angle",
-                                    choices = c("yes", "no"),
-                                    selected = "yes"),
-                shiny::selectInput(inputId = "AngleRef",
-                                   label = "Select pre computed Angle",
-                                   choices = AngleSelectionZone,
-                                   multiple = F),
-                shiny::numericInput(inputId = "AngleRange",
-                                    label = "Angle Range",
-                                    value = pi*(40/360),
-                                    min = 0,
-                                    max = 2*pi,
-                                    step = pi*(5/360)))
-              })})
-  })
+                                             x = colnames(CoordList)[grepl(x = colnames(CoordList), pattern = "_x|_y")]))
+               output$FunctionInput <- shiny::renderUI(expr = {
+                 shiny::selectInput(inputId = "SpeedRef",
+                                    label = "Select Variable",
+                                    choices = SpeedSelection,
+                                    multiple = F)
+               })
+               output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("The function will calculate the instantaneous distance (at each time step), the cumulative distance, and the speed of a label.")})
+               },
+             "Object Distance" = {
+               RefSelection <- unique(gsub(pattern = "_x|_y",
+                                           replacement = "",
+                                           x = colnames(CoordList)[grepl(x = colnames(CoordList), pattern = "_x|_y")]))
+               output$FunctionInput <- shiny::renderUI(expr = {
+                 shiny::selectInput(inputId = "Ref",
+                                    label = "Select Reference Variable",
+                                    choices = RefSelection,
+                                    multiple = F)
+               })
+               output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the distance between all provided stationary objects and a label for any given time point.")})
+               },
+             "Object Angle" = {
+               RefSelection <- unique(gsub(pattern = "_x|_y",
+                                           replacement = "",
+                                           x = colnames(CoordList)[grepl(x = colnames(CoordList), pattern = "_x|_y")]))
+               output$FunctionInput <- shiny::renderUI(expr = {list(
+                 shiny::selectInput(inputId = "Ref",
+                                    label = "Select Reference Endpoint",
+                                    choices = RefSelection,
+                                    multiple = F),
+                 shiny::selectInput(inputId = "RefStart",
+                                    label = "Select Reference Starting point",
+                                    choices = RefSelection,
+                                    multiple = F))
+               })
+               output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the angle between all provided stationary objects and a vector. If only one point of the vector is provided the angle to the frame reference will be computed.")})
+               },
+             "Vector Length" = {
+               LengthSelection <- unique(gsub(pattern = "_x|_y",
+                                              replacement = "",
+                                              x = colnames(CoordList)[grepl(pattern = "_x|_y", x = colnames(CoordList))]))
+               output$FunctionInput <- shiny::renderUI(expr = {list(
+                 shiny::selectInput(inputId = "VectorStart",
+                                    label = "Select Vector Start",
+                                    choices = LengthSelection,
+                                    multiple = F),
+                 shiny::selectInput(inputId = "VectorEnd",
+                                    label = "Select Vector End",
+                                    choices = LengthSelection,
+                                    multiple = F),
+                 shiny::textInput(inputId = "OutputName",
+                                  label = "Output Name",
+                                  placeholder = "type in variable name"))
+               })
+               output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the length of a vector consisting of two labels over time.")})
+               },
+             "Zone Entry" = {
+               DistanceRefSelection <- colnames(CoordList)[!grepl(x = colnames(CoordList), pattern = "_x|_y")]
+               AngleSelectionZone <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
+                                                                                                 FUN = function(x){
+                                                                                                   ifelse(test = is.numeric(x),
+                                                                                                          yes = max(abs(x))<=pi,
+                                                                                                          no = FALSE)
+                                                                                                 }),])])
+               output$FunctionInput <- shiny::renderUI(expr = {list(
+                 shiny::selectInput(inputId = "DistanceRef",
+                                    label = "Select Distance Variable",
+                                    choices = DistanceRefSelection,
+                                    multiple = F),
+                 shiny::radioButtons(inputId = "AngleInput",
+                                     label = "Use Angle",
+                                     choices = c("yes", "no"),
+                                     selected = "yes"),
+                 shiny::selectInput(inputId = "AngleRef",
+                                    label = "Select pre computed Angle",
+                                    choices = AngleSelectionZone,
+                                    multiple = F),
+                 shiny::numericInput(inputId = "AngleRange",
+                                     label = "Angle Range",
+                                     value = pi*(40/360),
+                                     min = 0,
+                                     max = 2*pi,
+                                     step = pi*(5/360)))
+                 output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the entry into a zone based on distance and an optional angle parameter to account for approaching an area. The output includes tagged binary frames where the conditions are true, a binary output for the entries, and the cumulative frames spent in an area.")})
+               })})
+           })
   
   shiny::observeEvent(input$AnalyseTable, {
     TableUpdate <- F
@@ -444,10 +474,12 @@ server <- function(input, output, session) {
             } else {
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }},
-            "Angle Calculation" = {if(!is.null(input$VectorStart) & !is.null(input$VectorEnd) & input$OutputName!="") {
+            "Angle Calculation" = {if(!is.null(input$VectorStart1) & !is.null(input$VectorEnd1) & input$OutputName!="") {
               AngleCalc(CoordTable = CoordList,
-                        VectorStart = input$VectorStart,
-                        VectorEnd = input$VectorEnd,
+                        VectorStart1 = input$VectorStart1,
+                        VectorEnd1 = input$VectorEnd1,
+                        VectorStart2 = input$VectorStart2,
+                        VectorEnd2 = input$VectorEnd2,
                         OutputName = input$OutputName,
                         Overwrite = T)
               TableUpdate <- T
@@ -596,11 +628,11 @@ server <- function(input, output, session) {
     input$AnalyseTable
     input$nextTabAnalysis}, {
       AngleCheck <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                         FUN = function(x){
-                                                                           ifelse(test = is.numeric(x),
-                                                                                  yes = max(abs(x))<=pi,
-                                                                                  no = FALSE)
-                                                                         }),])])
+                                                                                FUN = function(x){
+                                                                                  ifelse(test = is.numeric(x),
+                                                                                         yes = max(abs(x))<=pi,
+                                                                                         no = FALSE)
+                                                                                }),])])
       if(length(AngleCheck)==0) {
         PlotSelections <- c("Distance", "Length", "Location", "Speed")
       } else {
@@ -609,12 +641,12 @@ server <- function(input, output, session) {
       output$PlottingFunctions <- shiny::renderUI(expr = {list(shiny::selectInput(inputId = "PlottingSelect",
                                                                                   label = "Select Plot",
                                                                                   choices = PlotSelections),
-                                                              shiny::sliderInput("range", 
-                                                                           label = "Time Range:",
-                                                                           min = floor(CoordList[,min(Time),]),
-                                                                           max = ceiling(CoordList[,max(Time),]),
-                                                                           value = c(floor(CoordList[,min(Time),]), ceiling(CoordList[,max(Time),])),
-                                                                           step = 1))
+                                                               shiny::sliderInput("range", 
+                                                                                  label = "Time Range:",
+                                                                                  min = floor(CoordList[,min(Time),]),
+                                                                                  max = ceiling(CoordList[,max(Time),]),
+                                                                                  value = c(floor(CoordList[,min(Time),]), ceiling(CoordList[,max(Time),])),
+                                                                                  step = 1))
       })
       shiny::updateSelectInput(session = session,
                                inputId = "FileChoices",
@@ -624,13 +656,13 @@ server <- function(input, output, session) {
   
   shiny::observeEvent(input$FileChoices,{
     shiny::updateSliderInput(session = session,
-                      inputId = "range",
-                      label = "Time Range:",
-                      min = floor(CoordList[FileName %in% input$FileChoices,min(Time),]),
-                      max = ceiling(CoordList[FileName %in% input$FileChoices,max(Time),]),
-                      value = c(floor(CoordList[FileName %in% input$FileChoices,min(Time),]),
-                                ceiling(CoordList[FileName %in% input$FileChoices,max(Time),])), 
-                      step = 1)
+                             inputId = "range",
+                             label = "Time Range:",
+                             min = floor(CoordList[FileName %in% input$FileChoices,min(Time),]),
+                             max = ceiling(CoordList[FileName %in% input$FileChoices,max(Time),]),
+                             value = c(floor(CoordList[FileName %in% input$FileChoices,min(Time),]),
+                                       ceiling(CoordList[FileName %in% input$FileChoices,max(Time),])), 
+                             step = 1)
   })
   
   shiny::observeEvent({
@@ -638,12 +670,13 @@ server <- function(input, output, session) {
   }, {
     switch (input$PlottingSelect,
             "Angle" = {
+              output$PlotExplanation <- shiny::renderUI(expr = {shiny::helpText("Plot the chosen angle over time (without providing a selection for 2D) or in 2D. This will result in a 2D-Track with the colour coded angle.")})
               AngleSelection <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                                     FUN = function(x){
-                                                                                       ifelse(test = is.numeric(x),
-                                                                                              yes = max(abs(x))<=pi,
-                                                                                              no = FALSE)
-                                                                                     }),])])
+                                                                                            FUN = function(x){
+                                                                                              ifelse(test = is.numeric(x),
+                                                                                                     yes = max(abs(x))<=pi,
+                                                                                                     no = FALSE)
+                                                                                            }),])])
               CoordSelection <- c("",gsub(pattern = "_x",
                                           replacement = "",
                                           x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))]))
@@ -666,6 +699,7 @@ server <- function(input, output, session) {
                                    multiple = F))
               })},
             "Distance" = {
+              output$PlotExplanation <- shiny::renderUI(expr = {shiny::helpText("Plot the chosen distance over time (without providing a selection for 2D) or in 2D. This will result in a 2D-Track with the colour coded distance.")})
               DistRefSelection <- c("",unique(colnames(CoordList)[!grepl(pattern = "_x|_y", x = colnames(CoordList))]))
               CoordSelection <- c("",gsub(pattern = "_x",
                                           replacement = "",
@@ -684,6 +718,7 @@ server <- function(input, output, session) {
                                  value = "px"))
               })},
             "Length" = {
+              output$PlotExplanation <- shiny::renderUI(expr = {shiny::helpText("Plot the chosen vector lengt over time (without providing a selection for 2D) or in 2D. This will result in a 2D-Track with the colour coded vector length. A flip of the colour code will change the look-up table")})
               LengthRefSelection <- c("",unique(colnames(CoordList)[!grepl(pattern = "_x|_y", x = colnames(CoordList))]))
               CoordSelection <- c("",gsub(pattern = "_x",
                                           replacement = "",
@@ -706,6 +741,8 @@ server <- function(input, output, session) {
                                     selected = "yes"))
               })},
             "Location" = {
+              output$PlotExplanation <- shiny::renderUI(expr = {shiny::helpText("Plot the x-y location of a variable as line (Density Map = 'no') or as density map which will be computed based on the provided bin size.")})
+              
               CoordSelection <- c("",gsub(pattern = "_x",
                                           replacement = "",
                                           x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))]))
@@ -720,11 +757,12 @@ server <- function(input, output, session) {
                                     selected = "yes"),
                 shiny::numericInput(inputId = "BinNumber",
                                     label = "Number of Bins",
-                                    value = 500,
+                                    value = 200,
                                     min = 5,
                                     step = 10))
               })},
             "Speed" = {
+              output$PlotExplanation <- shiny::renderUI(expr = {shiny::helpText("Plot the chosen speed over time (without providing a selection for 2D) or in 2D. This will result in a 2D-Track with the colour coded speed.")})
               SpeedRefSelection <- c("",unique(colnames(CoordList)[!grepl(pattern = "_x|_y", x = colnames(CoordList))]))
               CoordSelection <- c("",gsub(pattern = "_x",
                                           replacement = "",
@@ -901,15 +939,15 @@ server <- function(input, output, session) {
   })
   
   shiny::observeEvent(ignoreNULL = TRUE,
-               eventExpr = {
-                 input$dirPlot
-               },
-               handlerExpr = {
-                 if (!"path" %in% names(dirPlot())) return()
-                 home <- normalizePath("~")
-                 globalP$plotpath <-
-                   file.path(home, paste(unlist(dirPlot()$path[-1]), collapse = .Platform$file.sep))
-               })
+                      eventExpr = {
+                        input$dirPlot
+                      },
+                      handlerExpr = {
+                        if (!"path" %in% names(dirPlot())) return()
+                        home <- normalizePath("~")
+                        globalP$plotpath <-
+                          file.path(home, paste(unlist(dirPlot()$path[-1]), collapse = .Platform$file.sep))
+                      })
   
   shiny::observeEvent(input$savePlot, {
     if(!is.null(OutputPlot) & PlotUpdate) {
@@ -940,15 +978,15 @@ server <- function(input, output, session) {
   })
   
   shiny::observeEvent(ignoreNULL = TRUE,
-               eventExpr = {
-                 input$dir
-               },
-               handlerExpr = {
-                 if (!"path" %in% names(dir())) return()
-                 home <- normalizePath("~")
-                 global$datapath <-
-                   file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
-               })
+                      eventExpr = {
+                        input$dir
+                      },
+                      handlerExpr = {
+                        if (!"path" %in% names(dir())) return()
+                        home <- normalizePath("~")
+                        global$datapath <-
+                          file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
+                      })
   
   shiny::observeEvent(input$SaveTables, {
     if(length(input$OutputSelection)>0 & nchar(input$FileType)>0) {
@@ -985,10 +1023,11 @@ server <- function(input, output, session) {
     }
     
   })
-}
-
-#' Start Analysis Application
-#'
-#' This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing, plotting, and exporting data.
-#' @export
-StartApp <- function() {shiny::shinyApp(ui = ui, server = server)}
+  }
+  
+  #' Start Analysis Application
+  #'
+  #' This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing, plotting, and exporting data.
+  #' @export
+  StartApp <- function() {shiny::shinyApp(ui = ui, server = server)}
+  
