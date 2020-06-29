@@ -7,7 +7,7 @@
 #' @param ReferenceColumn A string indicating the reference column (used for batch analysis).
 #' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
-#' @return Modifies existing DataTable.
+#' @return Modifies existing DataTable to add the object distance.
 #' @export
 ObjectDistance <- function(CoordTable,
                            ObjectTable,
@@ -59,14 +59,16 @@ ObjectDistance <- function(CoordTable,
 #' @param CoordTable A table including coordinates of labels.
 #' @param ObjectTable A table including the objects.
 #' @param Ref A string indicating the label used for object angle.
+#' @param RefStart A string indicating the label used for object angle.
 #' @param ReferenceColumn A string indicating the reference column (used for batch analysis).
 #' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
-#' @return Modifies existing DataTable.
+#' @return Modifies existing DataTable to add the angle to an object.
 #' @export
 ObjectAngle <- function(CoordTable,
                         ObjectTable,
                         Ref,
+                        RefStart = NULL,
                         ReferenceColumn = "",
                         Overwrite = TRUE) {
   ObjectLoc <- NULL
@@ -98,10 +100,19 @@ ObjectAngle <- function(CoordTable,
       objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
       CoordTable[,"tmp_x" := objX,][
         ,"tmp_y" := objY,]
-      AngleCalc(CoordTable = CoordTable,
-                VectorStart = Ref,
-                VectorEnd = "tmp",
-                OutputName = AngleName)
+      if(is.null(RefStart)) {
+        AngleCalc(CoordTable = CoordTable,
+                  VectorStart1 = Ref,
+                  VectorEnd1 = "tmp",
+                  OutputName = AngleName) 
+      } else {
+        AngleCalc(CoordTable = CoordTable,
+                  VectorStart1 = Ref,
+                  VectorEnd1 = "tmp",
+                  VectorStart2 = RefStart,
+                  VectorEnd2 = Ref,
+                  OutputName = AngleName) 
+      }
     }
   }
   CoordTable[,"tmp_x":= NULL,][
@@ -119,7 +130,7 @@ ObjectAngle <- function(CoordTable,
 #' @param AngleRange A double as indicating the angle range (+/-).
 #' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
-#' @return Modifies existing DataTable.
+#' @return Modifies existing DataTable and add the binary output for an entry, .
 #' @export
 ZoneEntry <- function(CoordTable,
                       DistanceRef,

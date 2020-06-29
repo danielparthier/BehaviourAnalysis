@@ -8,6 +8,7 @@ ObjectAngle(
   CoordTable,
   ObjectTable,
   Ref,
+  RefStart = NULL,
   ReferenceColumn = "",
   Overwrite = TRUE
 )
@@ -19,12 +20,14 @@ ObjectAngle(
 
 \item{Ref}{A string indicating the label used for object angle.}
 
+\item{RefStart}{A string indicating the label used for object angle.}
+
 \item{ReferenceColumn}{A string indicating the reference column (used for batch analysis).}
 
 \item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
 }
 \value{
-Modifies existing DataTable.
+Modifies existing DataTable to add the angle to an object.
 }
 \description{
 This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
