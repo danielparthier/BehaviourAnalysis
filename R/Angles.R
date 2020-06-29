@@ -1,30 +1,48 @@
 # Function to calculate angle (radians) between 2 vectors
-#' Calculate angle between two vectors
-#'
-#' This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
+#' Calculate angle between the reference frame and a vector or two vectors (optional).
+#' 
+#' This function will calculate the angle between two vectors. If only one vector is provided (VectorStart1, VectorEnd1)
+#' then the angle in relation to the reference framework is calculated (0,0). If a second vector is provided the output
+#' angle will be the difference between the two.
+#' 
 #' @param CoordTable A table including coordinates of labels.
-#' @param VectorStart A table including the objects.
-#' @param VectorEnd A vector string indicating the labels used for computing object angle.
-#' @param OutputName A string indicating the label used for object angle.
+#' @param VectorStart A string indicating the vector used for computing.
+#' @param VectorEnd A string indicating the vector used for computing.
+#' @param VectorStart A string indicating the vector used for computing (default = NULL).
+#' @param VectorEnd A string indicating the vector used for computing (default = NULL).
+#' @param OutputName A string indicating the label used for the output angle.
 #' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
 #' @return Modifies existing DataTable.
 #' @export
 AngleCalc <- function(CoordTable,
-                      VectorStart,
-                      VectorEnd,
+                      VectorStart1,
+                      VectorEnd1,
+                      VectorStart2 = NULL,
+                      VectorEnd2 = NULL,
                       OutputName,
                       Overwrite = TRUE) {
-  if(sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorStart, "_x"))))+sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorStart, "_y"))))!= 2) {
+  tmpAng1 <- NULL
+  tmpAng1 <- NULL
+  if(sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorStart1, "_x"))))+sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorStart1, "_y"))))!= 2) {
     stop("reference not found for VectorStart")
-  } else if(sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorEnd, "_x"))))+sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorEnd, "_y"))))!= 2) {
+  } else if(sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorEnd1, "_x"))))+sum(data.table::like(vector = names(CoordTable), pattern = c(paste0(VectorEnd1, "_y"))))!= 2) {
     stop("reference not found for VectorEnd")
   }
   if(!Overwrite) {
     OutputName <- VariableNameCheck(DataTable = CoordTable, NameString = OutputName)
   }
-  CoordTable[,eval(OutputName):=atan2(x = (get(paste0(VectorEnd, "_x"))-get(paste0(VectorStart, "_x"))),
-                                      y = (get(paste0(VectorEnd, "_y"))-get(paste0(VectorStart, "_y")))),]
+  if(is.null(VectorStart2) | is.null(VectorEnd2)) {
+    CoordTable[,eval(OutputName):=atan2(x = (get(paste0(VectorEnd1, "_x"))-get(paste0(VectorStart1, "_x"))),
+                                        y = (get(paste0(VectorEnd1, "_y"))-get(paste0(VectorStart1, "_y")))),] 
+  } else {
+    CoordTable[,`:=`(tmpAng1=atan2(x = (get(paste0(VectorEnd1, "_x"))-get(paste0(VectorStart1, "_x"))),
+                                     y = (get(paste0(VectorEnd1, "_y"))-get(paste0(VectorStart1, "_y")))),
+                     tmpAng2=atan2(x = (get(paste0(VectorEnd2, "_x"))-get(paste0(VectorStart2, "_x"))),
+                                     y = (get(paste0(VectorEnd2, "_y"))-get(paste0(VectorStart2, "_y"))))),]
+    AngleDiff(CoordTable = CoordTable, Angle1 = "tmpAng1", Angle2 = "tmpAng2", OutputName = OutputName, Overwrite = T)
+    CoordTable[,`:=`(tmpAng1=NULL,tmpAng2=NULL),]
+  }
 }
 
 #' Calculate difference between two angles (radians)
@@ -35,7 +53,7 @@ AngleCalc <- function(CoordTable,
 #' @param Angle1 A double indicating the angle in radians.
 #' @param Angle2 A double indicating the angle in radians.
 #' @param OutputName A string indicating for the output angle difference.
-#' @param Overwrite A bool indicating if ouput should be overwritten if it exists already (default = TRUE).
+#' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'
 #' @return Modifies existing DataTable.
 #' @export

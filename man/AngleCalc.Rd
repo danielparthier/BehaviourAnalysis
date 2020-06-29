@@ -2,24 +2,34 @@
 % Please edit documentation in R/Angles.R
 \name{AngleCalc}
 \alias{AngleCalc}
-\title{Calculate angle between two vectors}
+\title{Calculate angle between the reference frame and a vector or two vectors (optional).}
 \usage{
-AngleCalc(CoordTable, VectorStart, VectorEnd, OutputName, Overwrite = TRUE)
+AngleCalc(
+  CoordTable,
+  VectorStart1,
+  VectorEnd1,
+  VectorStart2 = NULL,
+  VectorEnd2 = NULL,
+  OutputName,
+  Overwrite = TRUE
+)
 }
 \arguments{
 \item{CoordTable}{A table including coordinates of labels.}
 
-\item{VectorStart}{A table including the objects.}
-
-\item{VectorEnd}{A vector string indicating the labels used for computing object angle.}
-
-\item{OutputName}{A string indicating the label used for object angle.}
+\item{OutputName}{A string indicating the label used for the output angle.}
 
 \item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
+
+\item{VectorStart}{A string indicating the vector used for computing (default = NULL).}
+
+\item{VectorEnd}{A string indicating the vector used for computing (default = NULL).}
 }
 \value{
 Modifies existing DataTable.
 }
 \description{
-This function calculates the angle from a reference to objects from an object table and adds the resulting distances to the DataTable as columns.
+This function will calculate the angle between two vectors. If only one vector is provided (VectorStart1, VectorEnd1)
+then the angle in relation to the reference framework is calculated (0,0). If a second vector is provided the output
+angle will be the difference between the two.
 }
