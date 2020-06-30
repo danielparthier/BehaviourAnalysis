@@ -34,7 +34,12 @@ ui <- shiny::fluidPage(
                                                                     label = "Adjust xy-Scaling",
                                                                     value = 1,
                                                                     min = 0,
-                                                                    step = 0.1)), 
+                                                                    step = 0.1)),
+                        # shiny::checkboxInput(inputId = "AutoSave", label = "Auto-Save", value = T),
+                        # shinyFiles::shinyDirButton(id = "dir",
+                        #                            label = "Directory",
+                        #                            title = "Directory",
+                        #                            buttonType = "default"),
                         shiny::actionButton(inputId = "nextTabAnalysis",
                                             label = "Continue")
                       ),
@@ -324,9 +329,9 @@ server <- function(input, output, session) {
              })
              output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("To calculate the centroid (midpoint) of 2 or more points fill in the names of points. Choose the new variable name assigned to the calculated centroid.")})},
            "Angle Calculation" = {
-             AngleSelection <- stats::na.omit(gsub(pattern = "_x",
+             AngleSelection <- c("", stats::na.omit(gsub(pattern = "_x",
                                                    replacement = "",
-                                                   x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))]))
+                                                   x = colnames(CoordList)[grepl(pattern = "_x", x = colnames(CoordList))])))
              output$FunctionInput <- shiny::renderUI(expr = {list(
                shiny::selectInput(inputId = "VectorStart1",
                                   label = "Select Vector1 Start",
@@ -407,7 +412,7 @@ server <- function(input, output, session) {
                                     multiple = F),
                  shiny::selectInput(inputId = "RefStart",
                                     label = "Select Reference Starting point",
-                                    choices = RefSelection,
+                                    choices = c("",RefSelection),
                                     multiple = F))
                })
                output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the angle between all provided stationary objects and a vector. If only one point of the vector is provided the angle to the frame reference will be computed.")})
@@ -475,11 +480,22 @@ server <- function(input, output, session) {
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }},
             "Angle Calculation" = {if(!is.null(input$VectorStart1) & !is.null(input$VectorEnd1) & input$OutputName!="") {
+              if((nchar(input$VectorStart2)==0|nchar(input$VectorStart2)==0) & !(nchar(input$VectorStart2)==0&nchar(input$VectorStart2)==0)) {
+                shiny::showNotification(ui = "Only one Vector Point", type = "error")
+                VectorStart2Input <- NULL
+                VectorEnd2Input <- NULL
+              } else if(nchar(input$VectorStart2)==0&nchar(input$VectorStart2)==0) {
+                VectorStart2Input <- NULL
+                VectorEnd2Input <- NULL
+              } else {
+                VectorStart2Input <- input$VectorStart2
+                VectorEnd2Input <- input$VectorEnd2
+              }
               AngleCalc(CoordTable = CoordList,
                         VectorStart1 = input$VectorStart1,
                         VectorEnd1 = input$VectorEnd1,
-                        VectorStart2 = input$VectorStart2,
-                        VectorEnd2 = input$VectorEnd2,
+                        VectorStart2 = VectorStart2Input,
+                        VectorEnd2 = VectorEnd2Input,
                         OutputName = input$OutputName,
                         Overwrite = T)
               TableUpdate <- T
@@ -517,9 +533,15 @@ server <- function(input, output, session) {
               shiny::showNotification(ui = "Missing Function Inputs", type = "error")
             }},
             "Object Angle" = {if(!is.null(input$Ref)) {
+              if(nchar(input$RefStart)==0) {
+                RefStartInput <- NULL
+              } else {
+                RefStartInput <- input$RefStart
+                } 
               ObjectAngle(CoordTable = CoordList,
                           ObjectTable = ObjectList,
                           Ref = input$Ref,
+                          RefStart = RefStartInput,
                           ReferenceColumn = "FileName",
                           Overwrite = T)
               TableUpdate <- T
