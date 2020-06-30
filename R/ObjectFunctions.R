@@ -91,28 +91,24 @@ ObjectAngle <- function(CoordTable,
         CoordTable[get(ReferenceColumn)==j,"tmp_x" := objX,][
           get(ReferenceColumn)==j,"tmp_y" := objY,]
       }
-      AngleCalc(CoordTable = CoordTable,
-                VectorStart1 = Ref,
-                VectorEnd1 = "tmp",
-                OutputName = AngleName)
     } else {
       objX <- ObjectTable[ObjectLoc==eval(ObjectName),x]
       objY <- ObjectTable[ObjectLoc==eval(ObjectName),y]
       CoordTable[,"tmp_x" := objX,][
         ,"tmp_y" := objY,]
-      if(is.null(RefStart)) {
-        AngleCalc(CoordTable = CoordTable,
-                  VectorStart1 = Ref,
-                  VectorEnd1 = "tmp",
-                  OutputName = AngleName) 
-      } else {
-        AngleCalc(CoordTable = CoordTable,
-                  VectorStart1 = Ref,
-                  VectorEnd1 = "tmp",
-                  VectorStart2 = RefStart,
-                  VectorEnd2 = Ref,
-                  OutputName = AngleName) 
-      }
+    }
+    if(is.null(RefStart)) {
+      AngleCalc(CoordTable = CoordTable,
+                VectorStart1 = Ref,
+                VectorEnd1 = "tmp",
+                OutputName = AngleName) 
+    } else {
+      AngleCalc(CoordTable = CoordTable,
+                VectorStart1 = Ref,
+                VectorEnd1 = "tmp",
+                VectorStart2 = RefStart,
+                VectorEnd2 = Ref,
+                OutputName = AngleName) 
     }
   }
   CoordTable[,"tmp_x":= NULL,][
