@@ -1033,7 +1033,7 @@ server <- function(input, output, session) {
                 #}
               },
               "mat (Matlab)" = {
-                shiny::showNotification(ui = "npy is currently not supported", type = "message")
+                shiny::showNotification(ui = "mat is currently not supported", type = "message")
                 #for(i in seq_along(FileFrame$data)) {
                 #  R.matlab::writeMat(paste0(FileFrame$FileOut[i], ".mat"), get(FileFrame$data[i]))
                 #}
