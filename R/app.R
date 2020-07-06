@@ -7,11 +7,9 @@ ui <- shiny::fluidPage(
                                          label = "Choose File",
                                          multiple = T,
                                          accept = ".csv"),
-                        shiny::numericInput(inputId = "FrameRate",
+                        shiny::textInput(inputId = "FrameRate",
                                             label = "Frame Rate",
-                                            value = 30,
-                                            min = 1,
-                                            step = 1),
+                                            value = "24"),
                         shiny::numericInput(inputId = "GroupLabels",
                                             label = "Number of Group Labels",
                                             value = 1,
@@ -176,6 +174,7 @@ server <- function(input, output, session) {
   Time <- NULL
   PlotUpdate <- FALSE
   OutputPlot <- NULL
+  EvalFrameRate <- 24
   
   # get files
   shiny::observeEvent(input$FileName, {
@@ -213,12 +212,12 @@ server <- function(input, output, session) {
         })
       }
     })
-  
+ 
   shiny::observeEvent(input$nextTabAnalysis, {
-    
+    EvalFrameRate <<- eval(parse(text = input$FrameRate))
     if(!any(is.null(unlist(lapply(1:length(GroupNames), function(x) {
       input[[GroupNames[x]]]
-    })))) & !is.null(input$FileName) & input$FrameRate > 0) {
+    })))) & !is.null(input$FileName) & EvalFrameRate > 0 & !is.null(EvalFrameRate)) {
       MouseBodyLabels <- lapply(1:length(GroupNames), function(x) {
         input[[GroupNames[x]]]
       })
@@ -229,7 +228,7 @@ server <- function(input, output, session) {
       shiny::withProgress(message = 'Loading Data', value = 0, {
         for(i in seq_along(FileList$name)) {
           BehaviourTable[[i]] <<- DeepLabCutLoad(FileName = FileList$datapath[i],
-                                                 FrameRate = input$FrameRate,
+                                                 FrameRate = EvalFrameRate,
                                                  MouseLabels = MouseBodyLabels,
                                                  xScale = input$Scaling,
                                                  yScale = input$Scaling,
@@ -515,7 +514,7 @@ server <- function(input, output, session) {
             "Distance and Speed" = {if(!is.null(input$SpeedRef)) {
               DistSpeedCalc(CoordTable = CoordList,
                             SpeedRef = input$SpeedRef,
-                            Interval = 1/input$FrameRate,
+                            Interval = 1/EvalFrameRate,
                             ReferenceColumn = "FileName",
                             Overwrite = T)
               TableUpdate <- T
