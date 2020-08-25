@@ -155,12 +155,9 @@ DeepLabCutLoad <- function(FileName,
                                  & data.table::like(vector = names(DataSet),
                                                     pattern = "_y")]
     # Generate object Location
-    ObjectSet <- data.table::data.table(x = data.table::melt.data.table(data = DataSet[,.SD,
-                                                                                       .SDcols = ObjNames_x],
-                                                                        measure.vars = ObjNames_x)$value,
-                                        y = data.table::melt.data.table(data = DataSet[,.SD,
-                                                                                       .SDcols = ObjNames_y],
-                                                                        measure.vars = ObjNames_y)$value)
+    ObjectSet <- data.table::rbindlist(lapply(seq_along(ObjectLabels), FUN = function(i) {
+      data.table::data.table(DataSet[,list(x = get(ObjNames_x[i]), y = get(ObjNames_y[i])),])[,ObjectName:=ObjectLabels[i],]
+    }))
     
     if(length(unique(unlist(ObjectLabels)))!=ObjectNumber) {
       ObjectLabels <- list(unlist(strsplit(names(DataSet)[data.table::like(vector = names(DataSet), pattern = "likelihood") & data.table::like(vector = names(DataSet), pattern = paste0(unique(unlist(ObjectLabels)), collapse = "|"))], split = "_likelihood")))
@@ -169,9 +166,10 @@ DeepLabCutLoad <- function(FileName,
     ObjectSet$ObjectLoc <- stats::kmeans(x = ObjectSet[,list(x,y)], centers = ObjectNumber)$cluster
     ObjectSet$Names <- rep(x = unique(unlist(ObjectLabels)), each = dim(DataSet)[1])
 
-    NameTransfer <- ObjectSet[,.N,by=.(ObjectLoc, Names)][,MaxVal:=ifelse(max(x = N)==N, TRUE, FALSE),by=ObjectLoc][,Names:=as.factor(Names),][MaxVal==TRUE,Names,]
+    NameTransfer <- ObjectSet[,.N,by=.(ObjectLoc, Names)][,MaxVal:=ifelse(max(x = N)==N, TRUE, FALSE),by=ObjectLoc][MaxVal==T,]
     for(i in 1:ObjectNumber) {
-      ObjectSet[ObjectLoc==i,ObjectLocNew:=NameTransfer[i],]
+      tmpIn <- NameTransfer[ObjectLoc==i,Names,]
+      ObjectSet[ObjectLoc==i,ObjectLocNew:=tmpIn,]
     }
     ObjectSet[,ObjectLoc:=ObjectLocNew,]
     # Generate object coordinate table
