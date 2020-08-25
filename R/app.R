@@ -33,7 +33,7 @@ ui <- shiny::fluidPage(
                                                                     value = 1,
                                                                     min = 0,
                                                                     step = 0.1)),
-                        # shiny::checkboxInput(inputId = "AutoSave", label = "Auto-Save", value = T),
+                        shiny::checkboxInput(inputId = "AutoSave", label = "Auto-Save", value = T),
                         # shinyFiles::shinyDirButton(id = "dir",
                         #                            label = "Directory",
                         #                            title = "Directory",
@@ -162,19 +162,34 @@ ui <- shiny::fluidPage(
 
 server <- function(input, output, session) {
   options(shiny.maxRequestSize=500*1024^2)
-  BehaviourTable <- NULL
-  FileList <- NULL
-  variableNameList <- NULL
-  uniquevariables <- NULL
-  InFileLabels <- NULL
-  GroupNames <- NULL
-  CoordList <- NULL
-  ObjectList <- NULL
-  AllList <- NULL
+  BehaviourTable <- CoordList <- ObjectList <- AllList <- NULL
+  FileList <- variableNameList <- uniquevariables <- InFileLabels <- GroupNames <- NULL
   Time <- NULL
-  PlotUpdate <- FALSE
   OutputPlot <- NULL
+  PlotUpdate <- FALSE
   EvalFrameRate <- 24
+  SessionPath <- tempdir()
+  
+  shiny::reactive({
+    if(input$AutoSave & data.table::is.data.table(CoordList)) {
+      print(paste("save here", SessionPath))
+      data.table::fwrite(x = CoordList, file = paste(SessionPath,"CoordList.csv", sep = .Platform$file.sep))
+    }
+  })
+  
+  shiny::reactive({
+    if(input$AutoSave & data.table::is.data.table(ObjectList)) {
+      data.table::fwrite(x = ObjectList, file = paste(SessionPath,"ObjectList.csv", sep = .Platform$file.sep))
+    }
+  })
+  
+  shiny::reactive({
+    if(input$AutoSave & data.table::is.data.table(AllList)) {
+      data.table::fwrite(x = AllList, file = paste(SessionPath,"AllList.csv", sep = .Platform$file.sep))
+    }
+  })
+  
+  
   
   # get files
   shiny::observeEvent(input$FileName, {
