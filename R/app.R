@@ -251,7 +251,6 @@ server <- function(input, output, session) {
                                                  ObjectNumber = length(input$ObjectChoices),
                                                  JumpCorrections = JumpCorr,
                                                  includeAll = IncAll)
-          
           BehaviourTable[[i]][[1]][,FileName:=FileList$name[i],]
           if(length(input$ObjectChoices)>0) {
             BehaviourTable[[i]][[2]][,FileName:=FileList$name[i],]  
@@ -451,18 +450,24 @@ server <- function(input, output, session) {
                output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the length of a vector consisting of two labels over time.")})
                },
              "Zone Entry" = {
+               
                DistanceRefSelection <- colnames(CoordList)[!grepl(x = colnames(CoordList), pattern = "_x|_y")]
-               AngleSelectionZone <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
-                                                                                                 FUN = function(x){
-                                                                                                   ifelse(test = is.numeric(x),
-                                                                                                          yes = max(abs(x))<=pi,
-                                                                                                          no = FALSE)
-                                                                                                 }),])])
+              AngleSelectionZone <- stats::na.omit(colnames(CoordList)[unlist(CoordList[,lapply(X = .SD,
+                                                                                                FUN = function(x){
+                                                                                                  ifelse(test = is.numeric(x),
+                                                                                                         yes = max(abs(x))<=pi,
+                                                                                                         no = FALSE)
+                                                                                                }),])])
                output$FunctionInput <- shiny::renderUI(expr = {list(
                  shiny::selectInput(inputId = "DistanceRef",
                                     label = "Select Distance Variable",
                                     choices = DistanceRefSelection,
                                     multiple = F),
+                 shiny::numericInput(inputId = "DistanceVal",
+                                    label = "Threshold",
+                                    value = 10,
+                                    min = 0,
+                                    step = 0.1),
                  shiny::radioButtons(inputId = "AngleInput",
                                      label = "Use Angle",
                                      choices = c("yes", "no"),
@@ -477,8 +482,9 @@ server <- function(input, output, session) {
                                      min = 0,
                                      max = 2*pi,
                                      step = pi*(5/360)))
-                 output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the entry into a zone based on distance and an optional angle parameter to account for approaching an area. The output includes tagged binary frames where the conditions are true, a binary output for the entries, and the cumulative frames spent in an area.")})
-               })})
+               })
+               output$FunctionExplanation <- shiny::renderUI(expr = {shiny::helpText("Calculate the entry into a zone based on distance and an optional angle parameter to account for approaching an area. The output includes tagged binary frames where the conditions are true, a binary output for the entries, and the cumulative frames spent in an area.")})
+               })
            })
   
   shiny::observeEvent(input$AnalyseTable, {
@@ -575,7 +581,7 @@ server <- function(input, output, session) {
             "Zone Entry" = {if(!is.null(input$Ref) & !is.null(input$AngleRef) & input$AngleRange>0) {
               ZoneEntry(CoordTable = CoordList,
                         DistanceRef = input$DistanceRef,
-                        Length = 10, #find if reference is needed or how to get length of every animal
+                        Length = input$DistanceVal, #10, #find if reference is needed or how to get length of every animal
                         AngleInclusion = ifelse(test = input$AngleInput == "yes",
                                                 yes = TRUE,
                                                 no = FALSE), 
