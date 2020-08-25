@@ -87,8 +87,8 @@ CentroidCollect <- function(CoordTable,
 DeepLabCutLoad <- function(FileName,
                            FrameRate,
                            MouseLabels,
-                           ObjectLabels,
-                           ObjectNumber,
+                           ObjectLabels = NULL,
+                           ObjectNumber = 0,
                            xScale = 1,
                            yScale = 1,
                            JumpCorrections = T,
@@ -155,8 +155,8 @@ DeepLabCutLoad <- function(FileName,
                                  & data.table::like(vector = names(DataSet),
                                                     pattern = "_y")]
     # Generate object Location
-    ObjectSet <- data.table::rbindlist(lapply(seq_along(ObjectLabels), FUN = function(i) {
-      data.table::data.table(DataSet[,list(x = get(ObjNames_x[i]), y = get(ObjNames_y[i])),])[,ObjectName:=ObjectLabels[i],]
+    ObjectSet <- data.table::rbindlist(lapply(seq_along(unlist(ObjectLabels)), FUN = function(i) {
+      data.table::data.table(DataSet[,list(x = get(ObjNames_x[i]), y = get(ObjNames_y[i])),])[,ObjectName:=unlist(ObjectLabels)[i],]
     }))
     
     if(length(unique(unlist(ObjectLabels)))!=ObjectNumber) {
