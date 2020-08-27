@@ -189,8 +189,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  
   # get files
   shiny::observeEvent(input$FileName, {
     FileList <<- input$FileName
