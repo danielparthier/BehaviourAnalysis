@@ -94,6 +94,9 @@ DeepLabCutLoad <- function(FileName,
                            JumpCorrections = T,
                            interpWindow = 21,
                            includeAll = T) {
+  if(!grepl(pattern = ".csv$", x = FileName)) {
+    stop("File input is currently not supported")
+  }
   frame <- NULL
   x <- NULL
   y <- NULL
