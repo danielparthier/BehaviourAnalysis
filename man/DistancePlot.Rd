@@ -5,7 +5,7 @@
 \title{Plot Distance}
 \usage{
 DistancePlot(
-  DataTable,
+  CoordTable,
   Distance,
   CoordRef = NULL,
   ObjectTable = NULL,
@@ -15,7 +15,7 @@ DistancePlot(
 )
 }
 \arguments{
-\item{DataTable}{A data.table used as input.}
+\item{CoordTable}{A data.table used as input.}
 
 \item{Distance}{A string referencing the distance column.}
 

@@ -38,7 +38,7 @@ CustomColourPalette <- function(Mode = "dark", n = 5) {
 #' This function plots the speed of the object used as speed reference. When adding the x/y 
 #' references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 #' is omitted the speed will be plotted against time.
-#' @param DataTable A data.table used as input.
+#' @param CoordTable A data.table used as input.
 #' @param Speed A string referencing the speed column.
 #' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
@@ -47,7 +47,7 @@ CustomColourPalette <- function(Mode = "dark", n = 5) {
 #'
 #' @return Returns a ggplot.
 #' @export
-SpeedPlot <- function(DataTable,
+SpeedPlot <- function(CoordTable,
                       Speed,
                       CoordRef = NULL,
                       ObjectTable = NULL,
@@ -55,7 +55,7 @@ SpeedPlot <- function(DataTable,
                       FacetRef = NULL) {
   ObjectLoc <- NULL
   if(is.null(CoordRef)&is.character(Speed)) {
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = "Time", y = Speed))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = "Time", y = Speed))+
       ggplot2::geom_line()+
       ggplot2::scale_x_continuous(expand = c(0,0))+
       ggplot2::scale_y_continuous(expand = c(0,0))+
@@ -70,10 +70,10 @@ SpeedPlot <- function(DataTable,
   } else if(is.character(CoordRef) & is.character(Speed)) {
     x <- paste0(CoordRef, "_x")
     y <- paste0(CoordRef, "_y")
-    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+    if(sum(grepl(x = names(CoordTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
       stop("CoordRef missmatch")
     }
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y, colour = Speed))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y, colour = Speed))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::scale_color_viridis_c()+
       ggplot2::labs(colour = paste0("Speed\n(", Unit, ")"))+
@@ -102,7 +102,7 @@ SpeedPlot <- function(DataTable,
 #' This function plots the speed of the object used as speed reference. When adding the x/y 
 #' references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 #' is omitted the speed will be plotted against time.
-#' @param DataTable A data.table used as input.
+#' @param CoordTable A data.table used as input.
 #' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
 #' @param Density A bool indicating whether the density should be plotted.
@@ -111,7 +111,7 @@ SpeedPlot <- function(DataTable,
 #'
 #' @return Returns a ggplot.
 #' @export
-LocationPlot <- function(DataTable,
+LocationPlot <- function(CoordTable,
                          CoordRef = NULL,
                          ObjectTable = NULL,
                          Density = TRUE,
@@ -122,10 +122,10 @@ LocationPlot <- function(DataTable,
   if(is.character(CoordRef) & Density) {
     x <- paste0(CoordRef, "_x")
     y <- paste0(CoordRef, "_y")
-    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+    if(sum(grepl(x = names(CoordTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
       stop("CoordRef missmatch")
     }
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y))+
       ggplot2::stat_density_2d(geom = "raster", ggplot2::aes(fill = ..density..),contour = FALSE, n = c(BinNumber, BinNumber))+
       ggplot2::scale_fill_viridis_c()+
       ggplot2::labs(fill = "Density")+
@@ -147,10 +147,10 @@ LocationPlot <- function(DataTable,
   } else if(is.character(CoordRef) & !Density) {
     x <- paste0(CoordRef, "_x")
     y <- paste0(CoordRef, "_y")
-    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+    if(sum(grepl(x = names(CoordTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
       stop("CoordRef missmatch")
     }
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1, colour = "black")+
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
@@ -177,7 +177,7 @@ LocationPlot <- function(DataTable,
 #' This function plots the distance of the object used as distance reference. When adding the x/y 
 #' references a 2D-plot is drawn using colour-coding for the distance. If the x/y information 
 #' is omitted the distance will be plotted against time.
-#' @param DataTable A data.table used as input.
+#' @param CoordTable A data.table used as input.
 #' @param Distance A string referencing the distance column.
 #' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
@@ -187,7 +187,7 @@ LocationPlot <- function(DataTable,
 #' 
 #' @return Returns a ggplot.
 #' @export
-DistancePlot <- function(DataTable,
+DistancePlot <- function(CoordTable,
                       Distance,
                       CoordRef = NULL,
                       ObjectTable = NULL,
@@ -200,7 +200,7 @@ DistancePlot <- function(DataTable,
   Time <- NULL
   value <- NULL
   if(is.null(CoordRef) & is.character(Distance) & !ObjectDistance) {
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = "Time", y = Distance))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = "Time", y = Distance))+
       ggplot2::geom_line()+
       ggplot2::scale_x_continuous(expand = c(0,0))+
       ggplot2::scale_y_continuous(expand = c(0,0))+
@@ -215,10 +215,10 @@ DistancePlot <- function(DataTable,
   } else if(is.character(CoordRef) & is.character(Distance) & !ObjectDistance) {
     x <- paste0(CoordRef, "_x")
     y <- paste0(CoordRef, "_y")
-    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+    if(sum(grepl(x = names(CoordTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
       stop("CoordRef missmatch")
     }
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y, colour = Distance))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y, colour = Distance))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::scale_color_viridis_c()+
       ggplot2::labs(colour = paste0("Distance\n(", Unit, ")"))+
@@ -239,7 +239,7 @@ DistancePlot <- function(DataTable,
     return(OutputPlot)
   } else if(is.null(CoordRef) & is.character(Distance) & ObjectDistance & is.data.table(ObjectTable)) {
     ####################### work here
-    tmpFrame <- melt(data = DataTable, id="Time", measure = paste(ObjectTable[,ObjectLoc], Distance,sep = "_"))
+    tmpFrame <- melt(data = CoordTable, id="Time", measure = paste(ObjectTable[,ObjectLoc], Distance,sep = "_"))
     for(i in ObjectTable[,ObjectLoc]) {
       tmpFrame[grepl(x = variable, pattern = i), ObjectName:=paste(unlist(strsplit(i, split = "_")), collapse = " "),]
     }
@@ -268,7 +268,7 @@ DistancePlot <- function(DataTable,
 #' This function plots the speed of the object used as speed reference. When adding the x/y 
 #' references a 2D-plot is drawn using colour-coding for the speed. If the x/y information 
 #' is omitted the speed will be plotted against time.
-#' @param DataTable A data.table used as input.
+#' @param CoordTable A data.table used as input.
 #' @param Angle A string referencing the angle.
 #' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
@@ -278,7 +278,7 @@ DistancePlot <- function(DataTable,
 #'
 #' @return Returns a ggplot.
 #' @export
-AnglePlot <- function(DataTable,
+AnglePlot <- function(CoordTable,
                       Angle,
                       CoordRef = NULL,
                       ObjectTable = NULL,
@@ -290,10 +290,10 @@ AnglePlot <- function(DataTable,
   ObjectLoc <- NULL
   AngleShift <- NULL
   if(is.null(CoordRef) & is.character(Angle)) {
-    tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi,Time = DataTable[,Time])
+    tmpFrame <- data.table::data.table(AngleVec = CoordTable[[Angle]]*180/pi,Time = CoordTable[,Time])
     if(is.character(FacetRef)) {
-      if(sum(FacetRef==colnames(DataTable))==1) {
-        tmpFrame[, eval(FacetRef) := DataTable[,get(FacetRef)],,]
+      if(sum(FacetRef==colnames(CoordTable))==1) {
+        tmpFrame[, eval(FacetRef) := CoordTable[,get(FacetRef)],,]
         tmpFrame[,AngleShift:=data.table::shift(AngleVec, n = -1),by=eval(FacetRef)]
         tmpFrame[,ColCut:=abs(AngleVec-AngleShift)<270,][is.na(ColCut), ColCut:=TRUE,]
         tmpFrame[,AngleShift:=NULL,][,ColCut:=as.integer(ColCut),]
@@ -321,14 +321,14 @@ AnglePlot <- function(DataTable,
   } else if(is.character(CoordRef) & is.character(Angle)) {
     x <- paste0(CoordRef, "_x")
     y <- paste0(CoordRef, "_y")
-    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+    if(sum(grepl(x = names(CoordTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
       stop("CoordRef missmatch")
     }
     if(is.null(FacetRef)) {
-      tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi, x = DataTable[[x]], y = DataTable[[y]])
+      tmpFrame <- data.table::data.table(AngleVec = CoordTable[[Angle]]*180/pi, x = CoordTable[[x]], y = CoordTable[[y]])
     } else {
-      tmpFrame <- data.table::data.table(AngleVec = DataTable[[Angle]]*180/pi, x = DataTable[[x]], y = DataTable[[y]])
-      tmpFrame[, eval(FacetRef) := DataTable[,get(FacetRef)],,]
+      tmpFrame <- data.table::data.table(AngleVec = CoordTable[[Angle]]*180/pi, x = CoordTable[[x]], y = CoordTable[[y]])
+      tmpFrame[, eval(FacetRef) := CoordTable[,get(FacetRef)],,]
     }
     OutputPlot <- ggplot2::ggplot(data = tmpFrame, ggplot2::aes(x = x, y = y, colour = AngleVec))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
@@ -408,7 +408,7 @@ AnglePlot <- function(DataTable,
 #' references a 2D-plot is drawn using colour-coding for the Length If the x/y information 
 #' is omitted the Length will be plotted against time. The length of a vector can be used to 
 #' estimate rearing or other postures. 
-#' @param DataTable A data.table used as input.
+#' @param CoordTable A data.table used as input.
 #' @param Length A string referencing the Length column.
 #' @param CoordRef A string referencing coordinate columns.
 #' @param ObjectTable Optional data.table with Objects.
@@ -418,7 +418,7 @@ AnglePlot <- function(DataTable,
 #' 
 #' @return Returns a ggplot.
 #' @export
-LengthPlot <- function(DataTable,
+LengthPlot <- function(CoordTable,
                       Length,
                       CoordRef = NULL,
                       ObjectTable = NULL,
@@ -427,7 +427,7 @@ LengthPlot <- function(DataTable,
                       FacetRef = NULL) {
   ObjectLoc <- NULL
   if(is.null(CoordRef)&is.character(Length)) {
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = "Time", y = Length))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = "Time", y = Length))+
       ggplot2::geom_line()+
       ggplot2::scale_x_continuous(expand = c(0,0))+
       ggplot2::scale_y_continuous(expand = c(0,0))+
@@ -442,10 +442,10 @@ LengthPlot <- function(DataTable,
   } else if(is.character(CoordRef) & is.character(Length)) {
     x <- paste0(CoordRef, "_x")
     y <- paste0(CoordRef, "_y")
-    if(sum(grepl(x = names(DataTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
+    if(sum(grepl(x = names(CoordTable), pattern = paste0(c(x, y), collapse = "|")))!=2) {
       stop("CoordRef missmatch")
     }
-    OutputPlot <- ggplot2::ggplot(data = DataTable, ggplot2::aes_string(x = x, y = y, colour = Length))+
+    OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y, colour = Length))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::scale_color_viridis_c(direction = ifelse(test = ColourFlip, yes = -1, no = 1))+
       ggplot2::labs(colour = paste0("Length\n(", Unit, ")"))+

@@ -5,7 +5,7 @@
 \title{Plot Location}
 \usage{
 LocationPlot(
-  DataTable,
+  CoordTable,
   CoordRef = NULL,
   ObjectTable = NULL,
   Density = TRUE,
@@ -14,7 +14,7 @@ LocationPlot(
 )
 }
 \arguments{
-\item{DataTable}{A data.table used as input.}
+\item{CoordTable}{A data.table used as input.}
 
 \item{CoordRef}{A string referencing coordinate columns.}
 

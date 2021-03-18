@@ -1,7 +1,8 @@
+### UI ####
 ui <- shiny::fluidPage(
   shiny::navbarPage(title = "Behaviour Analysis",id = "inTabset",
                     shiny::tabPanel(title = "Load Data", shiny::sidebarLayout(
-                      # Sidebar with input parameters for loading and accessing files
+                      ### Sidebar with input parameters for loading and accessing files ####
                       shiny::sidebarPanel(
                         shiny::fileInput(inputId = "FileName", 
                                          label = "Choose File",
@@ -9,7 +10,7 @@ ui <- shiny::fluidPage(
                                          accept = ".csv"),
                         shiny::textInput(inputId = "FrameRate",
                                             label = "Frame Rate",
-                                            value = "24"),
+                                            value = "25"),
                         shiny::numericInput(inputId = "GroupLabels",
                                             label = "Number of Group Labels",
                                             value = 1,
@@ -160,6 +161,7 @@ ui <- shiny::fluidPage(
   )
 )
 
+### Server ###
 server <- function(input, output, session) {
   options(shiny.maxRequestSize=500*1024^2)
   BehaviourTable <- CoordList <- ObjectList <- AllList <- NULL
@@ -169,6 +171,7 @@ server <- function(input, output, session) {
   PlotUpdate <- FALSE
   EvalFrameRate <- 24
   SessionPath <- tempdir()
+  global <- "~"
   
   shiny::reactive({
     if(input$AutoSave & data.table::is.data.table(CoordList)) {
@@ -192,15 +195,24 @@ server <- function(input, output, session) {
   # get files
   shiny::observeEvent(input$FileName, {
     FileList <<- input$FileName
+    if(any(!grepl(pattern = ".csv$", x = FileList$name))) {
+      shiny::showNotification(ui = "Incorrect file type. Please provide csv-file", type = "error")
+      FileList <<- NULL
+      variableNameList <<- NULL
+      uniquevariables <<- NULL
+      InFileLabels <<- NULL
+    } else {
     variableNameList <<- lapply(input$FileName$datapath, function(i) {
       utils::read.csv(file =  i, nrows = 1)[utils::read.csv(file =  i, nrows = 2)[2,]=="likelihood"]
     })
     uniquevariables <<- unlist(unique(variableNameList))
     InFileLabels <<- uniquevariables[apply(sapply(X = variableNameList, function(x){uniquevariables%in%x}), 1, all)]
+    }
     shiny::updateSelectInput(session = session,
                              inputId = "ObjectChoices",
                              label = "Objects:",
                              choices = InFileLabels)
+    
   })
   # check for changes in input variables
   shiny::observeEvent({
@@ -839,7 +851,7 @@ server <- function(input, output, session) {
                           !is.null(input$ColourScheme) &
                           !is.null(input$ObjectHighlight) &
                           !is.null(input$ObjectChoices)) {
-              OutputPlot <<- AnglePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- AnglePlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                        Angle = input$AngleChoice,
                                        CoordRef = CoordInput,
                                        ObjectTable = ObjectList[FileName %in% input$FileChoices,],
@@ -851,7 +863,7 @@ server <- function(input, output, session) {
                       !is.null(input$AngleChoice) &
                       !is.null(input$ColourScheme) &
                       is.null(input$ObjectChoices)) {
-              OutputPlot <<- AnglePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- AnglePlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                        Angle = input$AngleChoice,
                                        CoordRef = CoordInput,
                                        colourScheme = input$ColourScheme,
@@ -864,7 +876,7 @@ server <- function(input, output, session) {
                              !is.null(input$DistanceRef) &
                              !is.null(input$ObjectChoices) &
                              input$Unit!="") {
-              OutputPlot <<- DistancePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- DistancePlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                           Distance = input$DistanceRef,
                                           CoordRef = CoordInput,
                                           ObjectTable = ObjectList[FileName %in% input$FileChoices,],
@@ -875,7 +887,7 @@ server <- function(input, output, session) {
                       !is.null(input$DistanceRef) &
                       is.null(input$ObjectChoices) &
                       input$Unit!="") { 
-              OutputPlot <<- DistancePlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- DistancePlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                           Distance = input$DistanceRef,
                                           CoordRef = CoordInput,
                                           Unit = input$Unit,
@@ -889,7 +901,7 @@ server <- function(input, output, session) {
                            !is.null(input$ObjectChoices) &
                            input$Unit!="" &
                            !is.null(input$ColourFlip)) {
-              OutputPlot <<- LengthPlot(DataTable = CoordList[(FileName %in% input$FileChoices) & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- LengthPlot(CoordTable = CoordList[(FileName %in% input$FileChoices) & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                         Length = input$LengthRef,
                                         CoordRef = CoordInput,
                                         ObjectTable = ObjectList[FileName %in% input$FileChoices,],
@@ -902,7 +914,7 @@ server <- function(input, output, session) {
                       is.null(input$ObjectChoices) &
                       input$Unit!="" &
                       !is.null(input$ColourFlip)) { 
-              OutputPlot <<- LengthPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- LengthPlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                         Length = input$LengthRef,
                                         CoordRef = CoordInput,
                                         Unit = input$Unit,
@@ -915,7 +927,7 @@ server <- function(input, output, session) {
             "Location" = {if(!is.null(input$FileChoices) &
                              !is.null(input$ObjectChoices) &
                              !is.null(CoordInput)) {
-              OutputPlot <<- LocationPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- LocationPlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                           CoordRef = CoordInput,
                                           ObjectTable = ObjectList[FileName %in% input$FileChoices,],
                                           Density = ifelse(input$Density=="yes", TRUE, FALSE),
@@ -925,7 +937,7 @@ server <- function(input, output, session) {
             } else if(!is.null(input$FileChoices) &
                       is.null(input$ObjectChoices) &
                       !is.null(CoordInput)) { 
-              OutputPlot <<- LocationPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- LocationPlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                           CoordRef = CoordInput,
                                           Density = ifelse(input$Density=="yes", TRUE, FALSE),
                                           BinNumber = input$BinNumber,
@@ -938,7 +950,7 @@ server <- function(input, output, session) {
                           !is.null(input$SpeedRefCalc) &
                           !is.null(input$ObjectChoices) &
                           input$Unit!="") {
-              OutputPlot <<- SpeedPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- SpeedPlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                        Speed = input$SpeedRefCalc,
                                        CoordRef = CoordInput,
                                        ObjectTable = ObjectList[FileName %in% input$FileChoices,],
@@ -948,7 +960,7 @@ server <- function(input, output, session) {
                       !is.null(input$SpeedRefCalc) &
                       is.null(input$ObjectChoices) &
                       input$Unit!="") { 
-              OutputPlot <<- SpeedPlot(DataTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
+              OutputPlot <<- SpeedPlot(CoordTable = CoordList[FileName %in% input$FileChoices & data.table::between(x = Time, lower = input$range[1], upper = input$range[2]),],
                                        Speed = input$SpeedRefCalc,
                                        CoordRef = CoordInput,
                                        ObjectTable = ObjectList[FileName %in% input$FileChoices,],
@@ -1001,7 +1013,7 @@ server <- function(input, output, session) {
       shiny::showNotification(ui = paste(paste(globalP$plotpath, paste0(input$PlottingSelect,"_", input$CoordSelection, ".",input$ExportFormat), "Saved to")), type = "message")
     }
   })
-  
+
   shinyFiles::shinyDirChoose(
     input,
     'dir',
@@ -1009,7 +1021,7 @@ server <- function(input, output, session) {
     filetypes = c("xls", "txt", "csv", "tsv", "mat", "rds", "rda","pdf", "png", "svg", "eps")
   )
   
-  global <- shiny::reactiveValues(datapath = "~")
+  global <<- shiny::reactiveValues(datapath = getwd())
   
   dir <- shiny::reactive(input$dir)
   
@@ -1024,7 +1036,7 @@ server <- function(input, output, session) {
                       handlerExpr = {
                         if (!"path" %in% names(dir())) return()
                         home <- normalizePath("~")
-                        global$datapath <-
+                        global$datapath <<-
                           file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
                       })
   
@@ -1068,6 +1080,15 @@ server <- function(input, output, session) {
   #' Start Analysis Application
   #'
   #' This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing, plotting, and exporting data.
+  #' @param Cores Optional input argument to set number of threads. Default is set by data.table.
   #' @export
-  StartApp <- function() {shiny::shinyApp(ui = ui, server = server)}
+  StartApp <- function(Cores = NULL) {
+    if(is.numeric(Cores)) {
+      if(Cores > 0) {
+        data.table::setDTthreads(threads = round(Cores))
+        message(paste("Set thread number to:", data.table::getDTthreads()))
+      }
+    }
+    shiny::shinyApp(ui = ui, server = server)
+    }
   

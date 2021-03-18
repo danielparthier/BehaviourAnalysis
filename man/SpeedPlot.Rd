@@ -5,7 +5,7 @@
 \title{Plot Speed}
 \usage{
 SpeedPlot(
-  DataTable,
+  CoordTable,
   Speed,
   CoordRef = NULL,
   ObjectTable = NULL,
@@ -14,7 +14,7 @@ SpeedPlot(
 )
 }
 \arguments{
-\item{DataTable}{A data.table used as input.}
+\item{CoordTable}{A data.table used as input.}
 
 \item{Speed}{A string referencing the speed column.}
 

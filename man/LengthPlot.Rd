@@ -5,7 +5,7 @@
 \title{Plot Length}
 \usage{
 LengthPlot(
-  DataTable,
+  CoordTable,
   Length,
   CoordRef = NULL,
   ObjectTable = NULL,
@@ -15,7 +15,7 @@ LengthPlot(
 )
 }
 \arguments{
-\item{DataTable}{A data.table used as input.}
+\item{CoordTable}{A data.table used as input.}
 
 \item{Length}{A string referencing the Length column.}
 

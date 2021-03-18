@@ -5,7 +5,7 @@
 \title{Plot Angle}
 \usage{
 AnglePlot(
-  DataTable,
+  CoordTable,
   Angle,
   CoordRef = NULL,
   ObjectTable = NULL,
@@ -15,7 +15,7 @@ AnglePlot(
 )
 }
 \arguments{
-\item{DataTable}{A data.table used as input.}
+\item{CoordTable}{A data.table used as input.}
 
 \item{Angle}{A string referencing the angle.}
 

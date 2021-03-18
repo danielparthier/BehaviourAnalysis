@@ -4,7 +4,10 @@
 \alias{StartApp}
 \title{Start Analysis Application}
 \usage{
-StartApp()
+StartApp(Cores = NULL)
+}
+\arguments{
+\item{Cores}{Optional input argument to set number of threads. Default is set by data.table.}
 }
 \description{
 This function calls the Behaviour user interface which allows loading DeepLabCut output, analysing, plotting, and exporting data.
