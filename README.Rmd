@@ -61,19 +61,18 @@ DistSpeedCalc(CoordTable = MouseDataTable$DataTable,
               Interval = 1/FrameRate)
 AddCentroid(CoordTable = MouseDataTable$DataTable,
             CornerNames = list("ear"),
-            ReferenceColumn = "frame",
             OutputName = "BetweenEars")
 VectorLength(CoordTable = MouseDataTable$DataTable,
              VectorStart = "tailbase",
              VectorEnd = "BetweenEars",
              OutputName = "BodyLength")
 AngleCalc(CoordTable = MouseDataTable$DataTable,
-          VectorStart = "BetweenEars",
-          VectorEnd = "nose",
+          VectorStart1 = "BetweenEars",
+          VectorEnd1 = "nose",
           OutputName = "HeadAngle")
 AngleCalc(CoordTable = MouseDataTable$DataTable,
-          VectorStart = "tailbase",
-          VectorEnd = "BetweenEars",
+          VectorStart1 = "tailbase",
+          VectorEnd1 = "BetweenEars",
           OutputName = "BodyAngle")
 AngleDiff(CoordTable = MouseDataTable$DataTable,
           Angle1 = "BodyAngle",
@@ -87,11 +86,9 @@ The object specific calculations can be performed in the same way. `ObjectDistan
 ```{r ObjectFunctions, warning=F}
 ObjectDistance(CoordTable = MouseDataTable$DataTable,
                ObjectTable = MouseDataTable$ObjectTable,
-               ObjectLabels = ObjectList,
                Ref = "headCentroid")
 ObjectAngle(CoordTable = MouseDataTable$DataTable,
             ObjectTable = MouseDataTable$ObjectTable,
-            ObjectLabels = ObjectList,
             Ref = "headCentroid")
 VectorLength(CoordTable = MouseDataTable$DataTable,
              VectorStart = "nose",
@@ -99,7 +96,6 @@ VectorLength(CoordTable = MouseDataTable$DataTable,
              OutputName = "headLength")
 AddCentroid(CoordTable = MouseDataTable$DataTable,
             CornerNames = list("ear"),
-            ReferenceColumn = "frame",
             OutputName = "BetweenEars")
 ```
 
@@ -129,26 +125,23 @@ The data can be plotted using functions and strings as references. For some func
 
 ```{r PlottingFunctions1, warning=F}
 # Plot functions
-SpeedPlot <- SpeedPlot(DataTable = MouseDataTable$DataTable,
+SpeedPlot <- SpeedPlot(CoordTable = MouseDataTable$DataTable,
                        Speed = "SpeedbodyCentroid",
-                       x = "headCentroid_x",
-                       y = "headCentroid_y",
+                       CoordRef = "headCentroid",
                        ObjectTable = MouseDataTable$ObjectTable,
                        Unit = "cm/s")
 
-DensityPlot <- LocationPlot(DataTable = MouseDataTable$DataTable,
-                            x = "headCentroid_x",
-                            y = "headCentroid_y",
+DensityPlot <- LocationPlot(CoordTable = MouseDataTable$DataTable,
+                            CoordRef = "headCentroid",
                             ObjectTable = MouseDataTable$ObjectTable,
                             Density = T)
 
 
 if(ObjectNumber>0) {
   ObjectAnglePlots <- lapply(X = 1:ObjectNumber, FUN = function(objID) {
-    AnglePlot(DataTable = MouseDataTable$DataTable,
+    AnglePlot(CoordTable = MouseDataTable$DataTable,
               Angle = paste0("object_",objID,"_HeadAngle_Angle"),
-              x = "headCentroid_x",
-              y = "headCentroid_y",
+              CoordRef = "headCentroid",
               ObjectTable = MouseDataTable$ObjectTable,
               colourScheme = "light",
               ObjectHighlight = "alpha")
@@ -156,27 +149,26 @@ if(ObjectNumber>0) {
 }
 
 
-SpeedPlotLine <- SpeedPlot(DataTable = MouseDataTable$DataTable,
+SpeedPlotLine <- SpeedPlot(CoordTable =  MouseDataTable$DataTable,
                            Speed = "SpeedbodyCentroid",
                            Unit = "cm/s")
 
-DistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
+DistancePlotLine <- DistancePlot(CoordTable = MouseDataTable$DataTable,
                                  Distance = "CumDistbodyCentroid",
                                  Unit = "cm")
 
-ObjectDistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
+ObjectDistancePlotLine <- DistancePlot(CoordTable = MouseDataTable$DataTable,
                                        Distance = "headCentroid_Distance",
                                        ObjectTable = MouseDataTable$ObjectTable,
                                        ObjectDistance = T,
                                        Unit = "cm")
 
-RearingPlotLine <- LengthPlot(DataTable = MouseDataTable$DataTable,
+RearingPlotLine <- LengthPlot(CoordTable = MouseDataTable$DataTable,
                               Length = "BodyLength")
 
-RearingPlot <- LengthPlot(DataTable = MouseDataTable$DataTable,
+RearingPlot <- LengthPlot(CoordTable = MouseDataTable$DataTable,
                           Length = "BodyLength",
-                          x = "headCentroid_x",
-                          y = "headCentroid_y",
+                          CoordRef = "headCentroid",
                           ObjectTable = MouseDataTable$ObjectTable) +
   scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE, reverse = T), direction = -1)
 
@@ -247,10 +239,10 @@ Using this distribution we will get a Bayesian estimate of the preference parame
 
 ```{r PosteriorCalc, warning=F, echo=F}
 # Calculate cumulative entries
-CumulativeEntries <- data.table::copy(MouseDataTable$DataTable[,.(CumNovel = cumsum(object_2_headCentroid_Distance_inArea_entry),
-                                                                  CumOld = cumsum(object_1_headCentroid_Distance_inArea_entry),
-                                                                  InNovel = object_2_headCentroid_Distance_inArea,
-                                                                  InOld = object_1_headCentroid_Distance_inArea,
+CumulativeEntries <- data.table::copy(MouseDataTable$DataTable[,.(CumNovel = cumsum(object2_headCentroid_Distance_inArea_entry),
+                                                                  CumOld = cumsum(object1_headCentroid_Distance_inArea_entry),
+                                                                  InNovel = object2_headCentroid_Distance_inArea,
+                                                                  InOld = object1_headCentroid_Distance_inArea,
                                                                   Time = Time,
                                                                   TimeDiff = 1/FrameRate)])
 # PreferenceIndex over time

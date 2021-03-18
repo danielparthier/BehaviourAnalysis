@@ -17,13 +17,17 @@ AngleCalc(
 \arguments{
 \item{CoordTable}{A table including coordinates of labels.}
 
+\item{VectorStart1}{A string indicating the vector used for computing.}
+
+\item{VectorEnd1}{A string indicating the vector used for computing.}
+
+\item{VectorStart2}{A string indicating the vector used for computing (default = NULL).}
+
+\item{VectorEnd2}{A string indicating the vector used for computing (default = NULL).}
+
 \item{OutputName}{A string indicating the label used for the output angle.}
 
 \item{Overwrite}{A bool indicating if output should be overwritten if it exists already (default = TRUE).}
-
-\item{VectorStart}{A string indicating the vector used for computing (default = NULL).}
-
-\item{VectorEnd}{A string indicating the vector used for computing (default = NULL).}
 }
 \value{
 Modifies existing DataTable.

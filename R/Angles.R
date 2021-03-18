@@ -6,10 +6,10 @@
 #' angle will be the difference between the two.
 #' 
 #' @param CoordTable A table including coordinates of labels.
-#' @param VectorStart A string indicating the vector used for computing.
-#' @param VectorEnd A string indicating the vector used for computing.
-#' @param VectorStart A string indicating the vector used for computing (default = NULL).
-#' @param VectorEnd A string indicating the vector used for computing (default = NULL).
+#' @param VectorStart1 A string indicating the vector used for computing.
+#' @param VectorEnd1 A string indicating the vector used for computing.
+#' @param VectorStart2 A string indicating the vector used for computing (default = NULL).
+#' @param VectorEnd2 A string indicating the vector used for computing (default = NULL).
 #' @param OutputName A string indicating the label used for the output angle.
 #' @param Overwrite A bool indicating if output should be overwritten if it exists already (default = TRUE).
 #'

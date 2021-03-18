@@ -5,7 +5,7 @@ README
 
 The newest version of the package can be downloaded via
 `devtools::install_github(repo = "danielparthier/BehaviourAnalysis", ref
-= "package")`.
+= "package", dependencies = T)`.
 
 The task in the video is based on the *Novel-Object Recognition Task*.
 Therefore, we have two objects in the arena which are explored by the
@@ -51,7 +51,7 @@ library(data.table)
 MouseBodyList <- list()
 MouseBodyList$head <- c("ear", "nose")
 MouseBodyList$body <- c("ear", "tail")
-ObjectList <- list("object")
+ObjectList <- list("object1", "object2")
 
 MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  FrameRate = FrameRate,
@@ -105,19 +105,18 @@ DistSpeedCalc(CoordTable = MouseDataTable$DataTable,
               Interval = 1/FrameRate)
 AddCentroid(CoordTable = MouseDataTable$DataTable,
             CornerNames = list("ear"),
-            ReferenceColumn = "frame",
             OutputName = "BetweenEars")
 VectorLength(CoordTable = MouseDataTable$DataTable,
              VectorStart = "tailbase",
              VectorEnd = "BetweenEars",
              OutputName = "BodyLength")
 AngleCalc(CoordTable = MouseDataTable$DataTable,
-          VectorStart = "BetweenEars",
-          VectorEnd = "nose",
+          VectorStart1 = "BetweenEars",
+          VectorEnd1 = "nose",
           OutputName = "HeadAngle")
 AngleCalc(CoordTable = MouseDataTable$DataTable,
-          VectorStart = "tailbase",
-          VectorEnd = "BetweenEars",
+          VectorStart1 = "tailbase",
+          VectorEnd1 = "BetweenEars",
           OutputName = "BodyAngle")
 AngleDiff(CoordTable = MouseDataTable$DataTable,
           Angle1 = "BodyAngle",
@@ -138,11 +137,9 @@ of an object or can reduce noise.
 ``` r
 ObjectDistance(CoordTable = MouseDataTable$DataTable,
                ObjectTable = MouseDataTable$ObjectTable,
-               ObjectLabels = ObjectList,
                Ref = "headCentroid")
 ObjectAngle(CoordTable = MouseDataTable$DataTable,
             ObjectTable = MouseDataTable$ObjectTable,
-            ObjectLabels = ObjectList,
             Ref = "headCentroid")
 VectorLength(CoordTable = MouseDataTable$DataTable,
              VectorStart = "nose",
@@ -150,7 +147,6 @@ VectorLength(CoordTable = MouseDataTable$DataTable,
              OutputName = "headLength")
 AddCentroid(CoordTable = MouseDataTable$DataTable,
             CornerNames = list("ear"),
-            ReferenceColumn = "frame",
             OutputName = "BetweenEars")
 ```
 
@@ -196,26 +192,23 @@ plots are implemented with colour blind friendly colour schemes.
 
 ``` r
 # Plot functions
-SpeedPlot <- SpeedPlot(DataTable = MouseDataTable$DataTable,
+SpeedPlot <- SpeedPlot(CoordTable = MouseDataTable$DataTable,
                        Speed = "SpeedbodyCentroid",
-                       x = "headCentroid_x",
-                       y = "headCentroid_y",
+                       CoordRef = "headCentroid",
                        ObjectTable = MouseDataTable$ObjectTable,
                        Unit = "cm/s")
 
-DensityPlot <- LocationPlot(DataTable = MouseDataTable$DataTable,
-                            x = "headCentroid_x",
-                            y = "headCentroid_y",
+DensityPlot <- LocationPlot(CoordTable = MouseDataTable$DataTable,
+                            CoordRef = "headCentroid",
                             ObjectTable = MouseDataTable$ObjectTable,
                             Density = T)
 
 
 if(ObjectNumber>0) {
   ObjectAnglePlots <- lapply(X = 1:ObjectNumber, FUN = function(objID) {
-    AnglePlot(DataTable = MouseDataTable$DataTable,
+    AnglePlot(CoordTable = MouseDataTable$DataTable,
               Angle = paste0("object_",objID,"_HeadAngle_Angle"),
-              x = "headCentroid_x",
-              y = "headCentroid_y",
+              CoordRef = "headCentroid",
               ObjectTable = MouseDataTable$ObjectTable,
               colourScheme = "light",
               ObjectHighlight = "alpha")
@@ -223,27 +216,26 @@ if(ObjectNumber>0) {
 }
 
 
-SpeedPlotLine <- SpeedPlot(DataTable = MouseDataTable$DataTable,
+SpeedPlotLine <- SpeedPlot(CoordTable =  MouseDataTable$DataTable,
                            Speed = "SpeedbodyCentroid",
                            Unit = "cm/s")
 
-DistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
+DistancePlotLine <- DistancePlot(CoordTable = MouseDataTable$DataTable,
                                  Distance = "CumDistbodyCentroid",
                                  Unit = "cm")
 
-ObjectDistancePlotLine <- DistancePlot(DataTable = MouseDataTable$DataTable,
+ObjectDistancePlotLine <- DistancePlot(CoordTable = MouseDataTable$DataTable,
                                        Distance = "headCentroid_Distance",
                                        ObjectTable = MouseDataTable$ObjectTable,
                                        ObjectDistance = T,
                                        Unit = "cm")
 
-RearingPlotLine <- LengthPlot(DataTable = MouseDataTable$DataTable,
+RearingPlotLine <- LengthPlot(CoordTable = MouseDataTable$DataTable,
                               Length = "BodyLength")
 
-RearingPlot <- LengthPlot(DataTable = MouseDataTable$DataTable,
+RearingPlot <- LengthPlot(CoordTable = MouseDataTable$DataTable,
                           Length = "BodyLength",
-                          x = "headCentroid_x",
-                          y = "headCentroid_y",
+                          CoordRef = "headCentroid",
                           ObjectTable = MouseDataTable$ObjectTable) +
   scale_color_viridis_c(guide = guide_colourbar(title = "Rearing", label = FALSE, reverse = T), direction = -1)
 ```
