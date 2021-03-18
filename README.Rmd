@@ -36,7 +36,7 @@ library(data.table)
 MouseBodyList <- list()
 MouseBodyList$head <- c("ear", "nose")
 MouseBodyList$body <- c("ear", "tail")
-ObjectList <- list("object")
+ObjectList <- list("object1", "object2")
 
 MouseDataTable <- DeepLabCutLoad(FileName = FileName,
                                  FrameRate = FrameRate,
