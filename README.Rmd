@@ -140,7 +140,7 @@ DensityPlot <- LocationPlot(CoordTable = MouseDataTable$DataTable,
 if(ObjectNumber>0) {
   ObjectAnglePlots <- lapply(X = 1:ObjectNumber, FUN = function(objID) {
     AnglePlot(CoordTable = MouseDataTable$DataTable,
-              Angle = paste0("object_",objID,"_HeadAngle_Angle"),
+              Angle = paste0("object",objID,"_HeadAngle_Angle"),
               CoordRef = "headCentroid",
               ObjectTable = MouseDataTable$ObjectTable,
               colourScheme = "light",
