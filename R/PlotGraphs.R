@@ -75,6 +75,7 @@ SpeedPlot <- function(CoordTable,
     }
     OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y, colour = Speed))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
+      ggplot2::coord_equal()+
       ggplot2::scale_color_viridis_c()+
       ggplot2::labs(colour = paste0("Speed\n(", Unit, ")"))+
       ggplot2::theme_void()+
@@ -127,6 +128,7 @@ LocationPlot <- function(CoordTable,
     }
     OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y))+
       ggplot2::stat_density_2d(geom = "raster", ggplot2::aes(fill = ..density..),contour = FALSE, n = c(BinNumber, BinNumber))+
+      ggplot2::coord_equal()+
       ggplot2::scale_fill_viridis_c()+
       ggplot2::labs(fill = "Density")+
       ggplot2::theme_void()+
@@ -152,6 +154,7 @@ LocationPlot <- function(CoordTable,
     }
     OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1, colour = "black")+
+      ggplot2::coord_equal()+
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
@@ -220,6 +223,7 @@ DistancePlot <- function(CoordTable,
     }
     OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y, colour = Distance))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
+      ggplot2::coord_equal()+
       ggplot2::scale_color_viridis_c()+
       ggplot2::labs(colour = paste0("Distance\n(", Unit, ")"))+
       ggplot2::theme_void()+
@@ -332,6 +336,7 @@ AnglePlot <- function(CoordTable,
     }
     OutputPlot <- ggplot2::ggplot(data = tmpFrame, ggplot2::aes(x = x, y = y, colour = AngleVec))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
+      ggplot2::coord_equal()+
       ggplot2::labs(colour = "Angle\n(degrees)")+
       ggplot2::scale_color_gradientn(colours = CustomColourPalette(Mode = colourScheme, n = 5), limits = c(-180,180), breaks = c(-180, -90, 0, 90, 180))+
       ggplot2::theme_void()+
@@ -447,6 +452,7 @@ LengthPlot <- function(CoordTable,
     }
     OutputPlot <- ggplot2::ggplot(data = CoordTable, ggplot2::aes_string(x = x, y = y, colour = Length))+
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
+      ggplot2::coord_equal()+
       ggplot2::scale_color_viridis_c(direction = ifelse(test = ColourFlip, yes = -1, no = 1))+
       ggplot2::labs(colour = paste0("Length\n(", Unit, ")"))+
       ggplot2::theme_void()+
