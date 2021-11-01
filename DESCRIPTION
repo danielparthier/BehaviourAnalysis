@@ -16,5 +16,5 @@ Imports: data.table (>= 1.12.8),
     shiny,
     shinyFiles,
     DT
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Encoding: UTF-8
