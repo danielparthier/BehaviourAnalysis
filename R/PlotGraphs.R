@@ -79,6 +79,7 @@ SpeedPlot <- function(CoordTable,
       ggplot2::scale_color_viridis_c()+
       ggplot2::labs(colour = paste0("Speed\n(", Unit, ")"))+
       ggplot2::theme_void()+
+      ggplot2::coord_equal()+
       ggplot2::theme(legend.title.align=0.5)
     if(is.data.table(ObjectTable)) {
       labels <- gsub("[^\\d]+", "", ObjectTable[,ObjectLoc], perl=TRUE)
@@ -131,6 +132,7 @@ LocationPlot <- function(CoordTable,
       ggplot2::coord_equal()+
       ggplot2::scale_fill_viridis_c()+
       ggplot2::labs(fill = "Density")+
+      ggplot2::coord_equal()+
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
     if(is.data.table(ObjectTable)) {
@@ -225,6 +227,7 @@ DistancePlot <- function(CoordTable,
       ggplot2::geom_path(size=1, lineend = "round", linejoin = "round", linemitre = 1)+
       ggplot2::coord_equal()+
       ggplot2::scale_color_viridis_c()+
+      ggplot2::coord_equal()+
       ggplot2::labs(colour = paste0("Distance\n(", Unit, ")"))+
       ggplot2::theme_void()+
       ggplot2::theme(legend.title.align=0.5, plot.margin = ggplot2::margin(4, 10, 4, 4, "pt"))
